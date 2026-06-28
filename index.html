@@ -92,6 +92,12 @@
   .btn-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
   /* Full-screen slide-in menu */
+  .nav-menu-backdrop {
+    display: none;
+    position: fixed; inset: 0; z-index: 98;
+    background: transparent;
+  }
+  .nav-menu-backdrop.open { display: block; }
   .nav-menu {
     position: fixed;
     top: 120px;
@@ -832,7 +838,7 @@
 
   <!-- NAV -->
   <nav>
-    <div class="nav-logo">
+    <div class="nav-logo" onclick="showHomeView();clearSearch();" style="cursor:pointer">
   <span class="logo-red">Red</span><span class="logo-dark">H</span><span class="logo-flame">🔥</span><span class="logo-dark">t</span><span class="logo-red">Dealz</span><span class="logo-dotcom">.com</span>
 </div>
     <div class="nav-right">
@@ -853,6 +859,7 @@
   </nav>
 
   <!-- SLIDE-IN MENU -->
+  <div class="nav-menu-backdrop" id="navBackdrop" onclick="closeMenu()"></div>
   <div class="nav-menu" id="navMenu">
 
     <!-- Shop All -->
@@ -882,6 +889,16 @@
     <!-- FAQ -->
     <button class="menu-item" onclick="showFAQ();closeMenu()">
       FAQ <span class="menu-arrow">›</span>
+    </button>
+
+    <!-- Terms -->
+    <button class="menu-item" onclick="showTerms();closeMenu()">
+      Terms of Service <span class="menu-arrow">›</span>
+    </button>
+
+    <!-- Privacy -->
+    <button class="menu-item" onclick="showPrivacy();closeMenu()">
+      Privacy Policy <span class="menu-arrow">›</span>
     </button>
 
     <!-- Contact -->
@@ -1058,7 +1075,7 @@
     </div>
 
     <!-- Setup banner -->
-    <div class="setup-banner" id="setupBanner">
+    <div class="setup-banner hidden" id="setupBanner">
       <div class="setup-banner-text">
         <h4>Not connected to database yet</h4>
         <p>Products you add now are for preview only. Connect Supabase to save permanently.</p>
@@ -1394,12 +1411,18 @@ let uploadedMediaUrls = [];
 function toggleMenu() {
   const menu = document.getElementById('navMenu');
   const btn  = document.getElementById('hamburgerBtn');
+  const backdrop = document.getElementById('navBackdrop');
   const isOpen = menu.classList.contains('open');
-  if (isOpen) { closeMenu(); } else { menu.classList.add('open'); btn.classList.add('open'); }
+  if (isOpen) { closeMenu(); } else {
+    menu.classList.add('open');
+    btn.classList.add('open');
+    backdrop.classList.add('open');
+  }
 }
 function closeMenu() {
   document.getElementById('navMenu').classList.remove('open');
   document.getElementById('hamburgerBtn').classList.remove('open');
+  document.getElementById('navBackdrop').classList.remove('open');
 }
 function toggleCatMenu() {
   const list  = document.getElementById('catMenuList');
@@ -1688,14 +1711,8 @@ function openAdmin() {
 }
 
 async function checkSession() {
-  if (!isSupabaseConfigured) {
-    // demo mode — show dash directly
-    showAdminDash();
-    return;
-  }
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) showAdminDash();
-  else showAdminLogin();
+  // Always show login first — password required regardless of Supabase
+  showAdminLogin();
 }
 
 function showAdminLogin() {
@@ -1706,7 +1723,9 @@ function showAdminLogin() {
 function showAdminDash() {
   document.getElementById('adminLogin').classList.add('hidden');
   document.getElementById('adminDash').classList.remove('hidden');
-  if (isSupabaseConfigured) document.getElementById('setupBanner').classList.add('hidden');
+  // Always hide setup banner since Supabase is connected
+  const banner = document.getElementById('setupBanner');
+  if (banner) banner.classList.add('hidden');
   loadAdminProducts();
 }
 
@@ -1714,7 +1733,6 @@ function handleLogin() {
   const pass = document.getElementById('adminPassword').value;
   const err  = document.getElementById('loginError');
   err.classList.add('hidden');
-  // Change this password to whatever you want
   if (pass === 'RHD@admin2026') {
     showAdminDash();
   } else {
