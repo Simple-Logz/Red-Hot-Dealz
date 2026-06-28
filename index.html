@@ -5,7 +5,64 @@
 <meta charset="UTF-8" />
 <script src="https://js.stripe.com/v3/"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0" />
-<title>RedHotDealz — Brand New. Discounted Prices.</title>
+<title>RedHotDealz — Brand New Products Up to 80% Off | Overstock Deals</title>
+  <!-- ═══ SEO META TAGS ═══════════════════════════════════ -->
+  <meta name="description" content="RedHotDealz — Brand new products at up to 80% off retail prices. Genuine overstock items including phones, laptops, TVs, appliances, fashion and more. Free USPS shipping on qualifying orders.">
+  <meta name="keywords" content="discount store, overstock deals, brand new products cheap, cheap electronics, discount phones, discount laptops, liquidation deals, cheap TVs, discount appliances, RedHotDealz">
+  <meta name="author" content="RedHotDealz">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://redhotdealz.com">
+
+  <!-- ═══ OPEN GRAPH (Facebook, WhatsApp, LinkedIn) ════════ -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://redhotdealz.com">
+  <meta property="og:title" content="RedHotDealz — Brand New Products. Up to 80% Off.">
+  <meta property="og:description" content="Genuine brand new products from overstock warehouses. Phones, laptops, TVs, appliances, fashion and more — all at massive discounts. Shop now at RedHotDealz.com">
+  <meta property="og:image" content="https://redhotdealz.com/og-image.jpg">
+  <meta property="og:site_name" content="RedHotDealz">
+  <meta property="og:locale" content="en_US">
+
+  <!-- ═══ TWITTER CARD ═════════════════════════════════════ -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://redhotdealz.com">
+  <meta name="twitter:title" content="RedHotDealz — Brand New Products. Up to 80% Off.">
+  <meta name="twitter:description" content="Genuine brand new products from overstock warehouses at massive discounts. Shop phones, laptops, TVs, appliances and more.">
+  <meta name="twitter:image" content="https://redhotdealz.com/og-image.jpg">
+
+  <!-- ═══ STRUCTURED DATA (Google Rich Results) ════════════ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Store",
+    "name": "RedHotDealz",
+    "url": "https://redhotdealz.com",
+    "logo": "https://redhotdealz.com",
+    "description": "Brand new overstock products at up to 80% off retail prices. Phones, laptops, TVs, appliances, fashion and more.",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "US"
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "email": "hello@redhotdealz.com",
+      "contactType": "customer service"
+    },
+    "sameAs": [
+      "https://instagram.com/redhotdealz",
+      "https://facebook.com/redhotdealz"
+    ],
+    "priceRange": "$$",
+    "currenciesAccepted": "USD",
+    "paymentAccepted": "Credit Card, Debit Card, Apple Pay, Google Pay"
+  }
+  </script>
+
+  <!-- ═══ MOBILE / PWA ══════════════════════════════════════ -->
+  <meta name="theme-color" content="#cc0000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="RedHotDealz">
+
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cellipse cx='32' cy='56' rx='14' ry='6' fill='%23cc0000' opacity='0.4'/%3E%3Cpath d='M32,58 C18,52 12,40 16,28 C19,19 26,23 26,23 C24,34 30,39 30,39 C28,26 36,12 40,4 C40,4 39,28 46,32 C46,32 40,18 50,8 C50,8 57,26 52,42 C52,42 57,32 55,22 C55,22 60,36 56,48 C52,57 43,61 32,58 Z' fill='%23cc0000'/%3E%3Cpath d='M32,54 C21,49 16,38 19,27 C22,19 27,23 27,23 C25,33 31,37 31,37 C29,26 36,14 40,7 C40,7 39,27 45,31 C45,31 40,19 49,10 C49,10 55,27 51,41 C51,41 55,32 53,23 C53,23 57,36 54,46 C50,55 42,58 32,54 Z' fill='%23ff5500' opacity='0.9'/%3E%3Cpath d='M33,49 C24,45 20,35 23,26 C25,19 30,22 30,22 C28,31 33,35 33,35 C32,25 38,15 42,9 C42,9 41,27 47,30 C47,30 42,20 50,12 C50,12 55,27 51,39 C51,39 55,31 53,24 C53,24 57,35 54,44 C51,52 43,54 33,49 Z' fill='%23ffaa00' opacity='0.85'/%3E%3Cpath d='M38,28 C37,18 40,8 42,3 C42,3 41,21 47,25 C47,25 42,14 50,6 C50,6 55,22 52,34 C52,34 55,26 54,18 C54,18 58,30 55,41 C52,49 44,51 37,47 C35,40 36,34 38,28 Z' fill='%23ffdd00' opacity='0.85'/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500&family=Righteous&display=swap" rel="stylesheet" />
@@ -1826,19 +1883,21 @@ function removeMedia(idx) {
    ADMIN — PUBLISH PRODUCT
 ═══════════════════════════════════════════════════ */
 async function publishProduct() {
-  const category = document.getElementById('uploadCategory').value;
-  const name     = document.getElementById('uploadName').value.trim();
-  const brand    = document.getElementById('uploadBrand').value.trim();
-  const price    = parseFloat(document.getElementById('uploadPrice').value);
-  const retail   = parseFloat(document.getElementById('uploadRetail').value) || null;
-  const desc     = document.getElementById('uploadDesc').value.trim();
-  const isHot    = document.getElementById('uploadHotDeal').checked;
-  const weight   = document.getElementById('uploadWeight').value || 'under1';
+  const category  = document.getElementById('uploadCategory').value;
+  const name      = document.getElementById('uploadName').value.trim();
+  const brand     = document.getElementById('uploadBrand').value.trim();
+  const price     = parseFloat(document.getElementById('uploadPrice').value);
+  const retail    = parseFloat(document.getElementById('uploadRetail').value) || null;
+  const desc      = document.getElementById('uploadDesc').value.trim();
+  const isHot     = document.getElementById('uploadHotDeal').checked;
+  const weight    = document.getElementById('uploadWeight').value || 'under1';
+  const condition = document.getElementById('uploadCondition') ? document.getElementById('uploadCondition').value || 'Brand New' : 'Brand New';
+  const stock     = parseInt(document.getElementById('uploadStock') ? document.getElementById('uploadStock').value : 1) || 1;
 
   if (!category) { showToast('Please choose a category.', 'error'); return; }
   if (!name)     { showToast('Please enter a product name.', 'error'); return; }
   if (!price)    { showToast('Please enter your selling price.', 'error'); return; }
-  if (!mediaFiles.length) { showToast('Please add at least one photo.', 'error'); return; }
+  // Photo is optional — you can add it later
 
   const btn = document.getElementById('publishBtn');
   btn.disabled = true; btn.textContent = 'Uploading…';
@@ -1847,7 +1906,7 @@ async function publishProduct() {
     let mediaUrls = [];
 
     if (isSupabaseConfigured) {
-      // Upload media files to Supabase Storage
+      // Upload media files to Supabase Storage if any
       for (const file of mediaFiles) {
         const ext = file.name.split('.').pop();
         const path = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -1857,10 +1916,11 @@ async function publishProduct() {
         mediaUrls.push(publicUrl);
       }
 
-      // Save product to database including hot_deal flag
+      // Save product to database
       const { error: dbErr } = await supabase.from('products').insert({
         name, brand, category, price, retail_price: retail, description: desc,
-        media_urls: mediaUrls, published: true, hot_deal: isHot, sold: false, weight
+        media_urls: mediaUrls, published: true, hot_deal: isHot, sold: false,
+        weight, condition, stock
       });
       if (dbErr) throw dbErr;
 
@@ -1869,15 +1929,15 @@ async function publishProduct() {
       const demo = {
         id: Date.now(), name, brand, category, price,
         retail_price: retail, description: desc,
-        media_urls: [], hot_deal: isHot, sold: false, weight
+        media_urls: [], hot_deal: isHot, sold: false,
+        weight, condition, stock
       };
       allProducts.unshift(demo);
-      showToast('Demo mode: product added locally (not saved to database).', 'success');
     }
 
     showToast(`"${name}" is now live${isHot ? ' as a Hot Deal' : ''}.`, 'success');
     resetUploadForm();
-    await loadProducts(); // refresh storefront
+    await loadProducts();
 
   } catch(e) {
     console.error('Publish error:', e);
