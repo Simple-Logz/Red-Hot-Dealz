@@ -1695,6 +1695,17 @@ async function loadProducts() {
 function openModal(id) {
   const p = allProducts.find(x => x.id === id);
   if (!p) return;
+
+  // Track view via REST API
+  fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON,
+      'Authorization': `Bearer ${SUPABASE_ANON}`
+    },
+    body: JSON.stringify({ views: (p.views || 0) + 1 })
+  }).catch(() => {}); // silent — don't block modal opening
   const cat = getCatMeta(p.category);
   const discount = p.retail_price ? Math.round((1 - p.price / p.retail_price) * 100) : null;
   const savings = p.retail_price ? (p.retail_price - p.price).toFixed(2) : null;
@@ -2095,14 +2106,12 @@ async function loadAdminProducts() {
   const list = document.getElementById('adminProductsList');
   list.innerHTML = '<div style="color:#444;text-align:center;padding:40px">Loading…</div>';
   try {
-    let products = [];
-    if (isSupabaseConfigured) {
-      const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      products = data || [];
-    } else {
-      products = allProducts;
-    }
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?order=created_at.desc`, {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const products = await res.json();
+
     if (!products.length) {
       list.innerHTML = '<div style="color:#444;text-align:center;padding:60px">No products yet. Add your first one!</div>';
       return;
@@ -2111,42 +2120,67 @@ async function loadAdminProducts() {
       const cat = getCatMeta(p.category);
       const thumb = p.media_urls && p.media_urls[0]
         ? `<img src="${p.media_urls[0]}" style="width:100%;height:100%;object-fit:cover;border-radius:8px" alt="" />`
-        : '';
-      const hotBadge  = p.hot_deal ? `<span class="admin-hot-badge">✦ Hot Deal</span>` : '';
-      const soldBadge = p.sold     ? `<span class="admin-sold-badge">Sold</span>` : '';
-      return `<div class="admin-product-row" style="${p.sold ? 'opacity:0.5' : ''}">
+        : '<div style="width:100%;height:100%;background:#f0f0f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px">📦</div>';
+      const hotBadge  = p.hot_deal ? `<span class="admin-hot-badge">✦ Hot</span>` : '';
+      const soldBadge = p.sold ? `<span class="admin-sold-badge">Sold</span>` : '';
+      const views = p.views || 0;
+      return `<div class="admin-product-row" id="row-${p.id}" style="${p.sold ? 'opacity:0.5' : ''}">
         <div class="admin-product-thumb">${thumb}</div>
         <div class="admin-product-info">
           <div class="admin-product-name">${p.name} ${hotBadge} ${soldBadge}</div>
           <div class="admin-product-meta">
             <span class="admin-product-cat">${cat.label}</span>
-            &nbsp; $${Number(p.price).toFixed(2)}
-            ${p.retail_price ? `<span style="color:#444;text-decoration:line-through;margin-left:6px;font-size:11px">$${Number(p.retail_price).toFixed(2)}</span>` : ''}
-            ${p.sold ? `<span style="color:#555;margin-left:8px;font-size:11px">Sold — removes in 24h</span>` : ''}
+            &nbsp;$${Number(p.price).toFixed(2)}
+            ${p.retail_price ? `<span style="color:#aaa;text-decoration:line-through;margin-left:6px;font-size:11px">$${Number(p.retail_price).toFixed(2)}</span>` : ''}
+          </div>
+          <div style="font-size:11px;color:#888;margin-top:4px">
+            👁 ${views} view${views !== 1 ? 's' : ''}
           </div>
         </div>
-        <button class="btn-delete" onclick="deleteProduct(${p.id})" title="Remove">✕</button>
+        <button class="btn-delete" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g, "\\'")}')" title="Delete">✕</button>
       </div>`;
     }).join('');
   } catch(e) {
-    list.innerHTML = `<div style="color:var(--flash);text-align:center;padding:40px">Error loading products: ${e.message}</div>`;
+    list.innerHTML = `<div style="color:var(--flash);text-align:center;padding:40px">Error: ${e.message}</div>`;
   }
 }
 
-async function deleteProduct(id) {
-  if (!confirm('Remove this product from the store?')) return;
+async function deleteProduct(id, name) {
+  // First confirmation
+  if (!confirm(`Are you sure you want to delete "${name}"?\n\nThis cannot be undone.`)) return;
+  // Second confirmation
+  if (!confirm(`Final confirmation — permanently delete "${name}" from your store?`)) return;
+
   try {
-    if (isSupabaseConfigured) {
-      await supabase.from('products').delete().eq('id', id);
-    } else {
-      const idx = allProducts.findIndex(p => p.id === id);
-      if (idx > -1) allProducts.splice(idx, 1);
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: {
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`
+      }
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      alert('Delete failed: ' + err);
+      return;
     }
-    showToast('Product removed.', 'success');
-    loadAdminProducts();
-    loadProducts();
-  } catch(e) { showToast('Could not delete product.', 'error'); }
+
+    // Remove from UI immediately
+    const row = document.getElementById(`row-${id}`);
+    if (row) row.remove();
+
+    // Also remove from allProducts array
+    allProducts = allProducts.filter(p => p.id !== id);
+
+    showToast(`"${name}" has been permanently deleted.`, 'success');
+    await loadProducts();
+
+  } catch(e) {
+    alert('Could not delete product: ' + e.message);
+  }
 }
+
 
 /* ════════════════════════════════════════════════
    TOAST
