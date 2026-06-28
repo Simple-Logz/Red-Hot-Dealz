@@ -113,15 +113,20 @@
 
   /* ─── STICKY HEADER ──────────────────────────────────── */
   .sticky-header {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 99;
-    background: var(--white);
+    background: transparent;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 2px 24px rgba(0,0,0,0.1);
   }
 
   nav {
     position: relative; top: auto; z-index: 100;
-    background: #ffffff;
+    background: rgba(255,255,255,0.85);
     border-bottom: 4px solid #cc0000;
     padding: 0 28px;
     display: flex; align-items: center; justify-content: space-between;
@@ -251,7 +256,7 @@
 
   /* ─── SALE BANNER ─────────────────────────────────────── */
   .sale-banner {
-    background: #cc0000;
+    background: rgba(180,0,0,0.88);
     padding: 20px 20px;
     display: flex; align-items: center; justify-content: center;
     gap: 14px; flex-wrap: wrap;
@@ -1015,6 +1020,9 @@
   </div>
   </div><!-- /trust-row -->
   </div><!-- /sticky-header -->
+
+  <!-- CONTENT SPACER — pushes content below fixed header -->
+  <div id="headerSpacer"></div>
 
   <!-- SEARCH -->
   <div class="search-wrap">
@@ -2318,6 +2326,18 @@ function sendOrderNotification(customerName, customerPhone, productName, price) 
     store_url: window.location.origin
   });
 }
+
+
+/* Set spacer height to match fixed header */
+function updateHeaderSpacer() {
+  const header = document.getElementById('stickyHeader');
+  const spacer = document.getElementById('headerSpacer');
+  if (header && spacer) {
+    spacer.style.height = header.offsetHeight + 'px';
+  }
+}
+window.addEventListener('load', updateHeaderSpacer);
+window.addEventListener('resize', updateHeaderSpacer);
 
 loadSupabaseThenInit();
 </script>
