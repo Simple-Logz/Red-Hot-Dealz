@@ -2068,16 +2068,25 @@ function openModal(id) {
   if (!p) return;
   setURL({product: toSlug(p.name)});
 
-  // Track view via REST API
-  fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': SUPABASE_ANON,
-      'Authorization': `Bearer ${SUPABASE_ANON}`
-    },
-    body: JSON.stringify({ views: (p.views || 0) + 1 })
-  }).catch(() => {}); // silent — don't block modal opening
+  // Only count view once per device per product
+  const viewedKey = 'rhd_viewed';
+  let viewed = [];
+  try { viewed = JSON.parse(localStorage.getItem(viewedKey) || '[]'); } catch(e) {}
+  
+  if (!viewed.includes(id)) {
+    viewed.push(id);
+    try { localStorage.setItem(viewedKey, JSON.stringify(viewed)); } catch(e) {}
+    // Increment view count in Supabase
+    fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`
+      },
+      body: JSON.stringify({ views: (p.views || 0) + 1 })
+    }).catch(() => {});
+  }
   const cat = getCatMeta(p.category);
   const discount = p.retail_price ? Math.round((1 - p.price / p.retail_price) * 100) : null;
   const savings = p.retail_price ? (p.retail_price - p.price).toFixed(2) : null;
