@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#b91c1c"/>
+
+  <!-- Top accent stripe -->
+  <rect x="0" y="0" width="1200" height="8" fill="#ffcc00"/>
+  <!-- Bottom accent stripe -->
+  <rect x="0" y="622" width="1200" height="8" fill="#ffcc00"/>
+
+  <!-- Main logo text - all one piece, no flame tricks -->
+  <text x="600" y="220" 
+    font-family="Arial Black, Arial, sans-serif" 
+    font-size="130" 
+    font-weight="900" 
+    fill="white" 
+    text-anchor="middle"
+    letter-spacing="-2">RedHotDealz</text>
+
+  <!-- .com subscript -->
+  <text x="600" y="290" 
+    font-family="Arial Black, Arial, sans-serif" 
+    font-size="48" 
+    font-weight="900" 
+    fill="#ffcc00" 
+    text-anchor="middle"
+    letter-spacing="2">.com</text>
+
+  <!-- Divider -->
+  <rect x="200" y="318" width="800" height="4" fill="rgba(255,255,255,0.3)" rx="2"/>
+
+  <!-- Tagline -->
+  <text x="600" y="385" 
+    font-family="Arial, sans-serif" 
+    font-size="36" 
+    font-weight="700"
+    fill="rgba(255,255,255,0.92)" 
+    text-anchor="middle">Brand New Products — Up to 70% Off Retail</text>
+
+  <!-- Trust badges -->
+  <text x="200" y="460" font-family="Arial,sans-serif" font-size="24" fill="rgba(255,255,255,0.8)">✓ 100% Authentic</text>
+  <text x="500" y="460" font-family="Arial,sans-serif" font-size="24" fill="rgba(255,255,255,0.8)">✓ Secure Checkout</text>
+  <text x="800" y="460" font-family="Arial,sans-serif" font-size="24" fill="rgba(255,255,255,0.8)">✓ USPS Shipping</text>
+
+  <!-- Bottom dark bar -->
+  <rect x="0" y="510" width="1200" height="112" fill="rgba(0,0,0,0.4)"/>
+  <text x="600" y="578" 
+    font-family="Arial Black, Arial, sans-serif" 
+    font-size="36" 
+    font-weight="900"
+    fill="white" 
+    text-anchor="middle">www.redhotdealz.com</text>
+
+</svg>
