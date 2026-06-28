@@ -717,10 +717,11 @@
   .reviews-overlay {
     position: fixed; inset: 0; z-index: 500;
     background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
-    display: flex; align-items: flex-end; justify-content: center;
-    opacity: 0; visibility: hidden; transition: all .25s;
+    display: none; align-items: flex-end; justify-content: center;
+    opacity: 0; transition: all .25s;
   }
-  .reviews-overlay.open { opacity: 1; visibility: visible; }
+  .reviews-overlay.open { display: flex; opacity: 1; }
+  .hidden { display: none !important; }
   .reviews-panel {
     background: var(--white); width: 100%; max-width: 600px;
     max-height: 85vh; border-radius: 24px 24px 0 0;
