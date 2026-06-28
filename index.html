@@ -1477,7 +1477,7 @@
 
 
 <!-- EDIT PRODUCT MODAL -->
-<div class="modal-overlay hidden" id="editModal">
+<div class="modal-overlay hidden" id="editModal" style="z-index:500">
   <div class="modal" style="position:relative;max-height:90vh">
     <button class="modal-close" onclick="closeEditModal()">✕</button>
     <div class="modal-body" style="padding:24px">
@@ -1539,7 +1539,7 @@
 
 
 <!-- REVIEWS PANEL -->
-<div class="reviews-overlay hidden" id="reviewsOverlay" onclick="handleReviewsOverlayClick(event)">
+<div class="reviews-overlay hidden" id="reviewsOverlay" onclick="handleReviewsOverlayClick(event)" style="z-index:500">
   <div class="reviews-panel" id="reviewsPanel">
     <div class="reviews-header">
       <div class="reviews-title" id="reviewsProductName">Reviews</div>
@@ -1852,7 +1852,7 @@ function renderGrid(products) {
           ${p.retail_price ? `<div class="card-retail">$${Number(p.retail_price).toFixed(2)}</div>` : ''}
         </div>
         ${p.sold ? `<div style="font-size:12px;color:#999;margin-top:8px;font-weight:600">This item has been sold</div>` : `<button class="card-cta" onclick="event.stopPropagation();openModal(${p.id})">View Deal</button><button class="btn-add-cart" onclick="event.stopPropagation();addToCart(${p.id})">Add to Cart</button>`}
-        <button class="btn-reviews" onclick="event.stopPropagation();openReviews(${p.id}, this.dataset.name)" data-name="${p.name}">${p.review_count > 0 ? p.review_count + ' review' + (p.review_count > 1 ? 's' : '') + ' · ' + Number(p.avg_rating).toFixed(1) + ' ★' : '☆ Write a Review'}</button>
+        <button class="btn-reviews" onclick="event.stopPropagation();showReviews(${p.id})">&#9734; Reviews${p.review_count > 0 ? " (" + p.review_count + ")" : ""}</button>
       </div>
     </div>`;
   }).join('');
@@ -2958,8 +2958,13 @@ async function saveEditProduct() {
 let currentReviewProductId = null;
 let selectedStarRating = 0;
 
-function openReviews(productId, nameEl) {
-  const productName = typeof nameEl === "string" ? nameEl : (nameEl && nameEl.dataset ? nameEl.dataset.name : "Product");
+function showReviews(productId) {
+  const p = allProducts.find(x => x.id === productId);
+  const productName = p ? p.name : "Product";
+  openReviews(productId, productName);
+}
+
+function openReviews(productId, productName) {
   currentReviewProductId = productId;
   selectedStarRating = 0;
   document.getElementById('reviewsProductName').textContent = productName;
