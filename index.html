@@ -1903,7 +1903,7 @@ function filterCategory(catId) {
   activeCategory = catId;
   isHomeView = false;
   currentPage = 0;
-  if (catId === "all") { setURL({}); } else { setURL({category: catId}); }
+  if (catId === "all") { setURL({view: "all-products"}); document.title = "All Products | RedHotDealz"; } else { setURL({category: catId}); document.title = catId.replace(/_/g," ").replace(/\b\w/g,l=>l.toUpperCase()) + " | RedHotDealz"; }
   const cat = CATEGORIES.find(c => c.id === catId);
   const pool = allProducts.filter(p => !p.sold);
   const filtered = catId === 'all' ? pool : pool.filter(p => p.category === catId);
@@ -1922,7 +1922,7 @@ function showHomeView(page) {
   activeCategory = 'all';
   isHomeView = true;
   if (page !== undefined) currentPage = page;
-  setURL(currentPage > 0 ? {page: currentPage} : {}); document.title = "RedHotDealz — Brand New. Discounted Prices.";
+  setURL(currentPage > 0 ? {page: currentPage, view: "latest-deals"} : {view: "latest-deals"}); document.title = "Latest Deals | RedHotDealz";
 
   const pool = allProducts.filter(p => !p.sold);
   const totalPages = Math.ceil(pool.length / HOME_LIMIT);
@@ -1952,6 +1952,8 @@ function renderPagination(page, total) {
 function showHotDealsView() {
   activeCategory = 'hot';
   isHomeView = false;
+  setURL({view: 'hot-deals'});
+  document.title = 'Hot Deals | RedHotDealz';
   const hotDeals = allProducts.filter(p => p.hot_deal && !p.sold);
 
   document.getElementById('sectionTitle').textContent = '✦ Hot Deals';
@@ -2054,6 +2056,15 @@ async function loadProducts() {
     const found = allProducts.find(x => toSlug(x.name) === slug);
     showHomeView();
     if (found) setTimeout(() => openModal(found.id), 300);
+  } else if (window.pendingView) {
+    const v = window.pendingView;
+    window.pendingView = null;
+    if (v === 'hot-deals') showHotDealsView();
+    else if (v === 'all-products') { filterCategory('all'); }
+    else if (v === 'about') { showHomeView(); setTimeout(() => showAbout(), 300); }
+    else if (v === 'faq') { showHomeView(); setTimeout(() => showFAQ(), 300); }
+    else if (v === 'privacy') { showHomeView(); setTimeout(() => showPrivacy(), 300); }
+    else if (v === 'terms') { showHomeView(); setTimeout(() => showTerms(), 300); }
   } else if (window.pendingCategory) {
     const cat = window.pendingCategory;
     window.pendingCategory = null;
@@ -3634,8 +3645,19 @@ function handleURLOnLoad() {
   if (p.payment === 'success') { setTimeout(() => showToast('Payment successful! Thank you for your order.', 'success'), 500); cart = []; updateCartUI(); }
   if (p.payment === 'cancelled') { setTimeout(() => showToast('Payment cancelled.', 'error'), 500); }
   if (p.product) {
-    // Product slug — find by name slug after products load
     window.pendingProductSlug = p.product;
+  } else if (p.view === 'hot-deals') {
+    window.pendingView = 'hot-deals';
+  } else if (p.view === 'all-products') {
+    window.pendingView = 'all-products';
+  } else if (p.view === 'about') {
+    window.pendingView = 'about';
+  } else if (p.view === 'faq') {
+    window.pendingView = 'faq';
+  } else if (p.view === 'privacy') {
+    window.pendingView = 'privacy';
+  } else if (p.view === 'terms') {
+    window.pendingView = 'terms';
   }
   if (p.category) {
     window.pendingCategory = p.category;
@@ -3662,7 +3684,9 @@ window.addEventListener('popstate', () => {
   else if (p.view === 'faq') { showFAQ(); }
   else if (p.view === 'privacy') { showPrivacy(); }
   else if (p.view === 'terms') { showTerms(); }
-  else if (p.view === 'hotdeals') { showHotDeals(); }
+  else if (p.view === 'hot-deals') { showHotDealsView(); }
+  else if (p.view === 'all-products') { filterCategory('all'); }
+  else if (p.view === 'latest-deals' || (!p.view && !p.product && !p.category && !p.search)) { showHomeView(); }
   else if (p.product) {
     const found = allProducts.find(x => toSlug(x.name) === p.product);
     if (found) openModal(found.id);
