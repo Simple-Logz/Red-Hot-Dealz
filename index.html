@@ -167,9 +167,10 @@
   /* Full-screen slide-in menu */
   .nav-menu-backdrop {
     display: none;
-    position: fixed; inset: 0; z-index: 148;
-    background: rgba(0,0,0,0.3);
+    position: fixed; inset: 0; z-index: 998;
+    background: rgba(0,0,0,0.35);
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
   .nav-menu-backdrop.open { display: block; }
   .nav-menu {
@@ -1069,6 +1070,12 @@
   <span class="logo-red">Red</span><span class="logo-dark">H</span><span class="logo-flame">🔥</span><span class="logo-dark">t</span><span class="logo-red">Dealz</span><span class="logo-dotcom">.com</span>
 </div>
     <div class="nav-right">
+      <!-- Search in nav -->
+      <div style="display:flex;align-items:center;background:#f4f5f7;border:1.5px solid #e5e7eb;border-radius:20px;padding:6px 12px;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input id="searchInput" type="text" placeholder="Search…" oninput="handleSearch(this.value)" style="border:none;background:none;font-size:13px;font-family:inherit;color:#111;outline:none;width:120px">
+        <button id="searchClear" onclick="clearSearch()" class="hidden" style="border:none;background:none;color:#aaa;cursor:pointer;font-size:14px;padding:0">✕</button>
+      </div>
       <!-- Cart button -->
       <button class="cart-btn" onclick="openCart()" aria-label="Cart">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -3037,6 +3044,7 @@ let searchQuery = '';
 function handleSearch(q) {
   searchQuery = q.toLowerCase().trim();
   if (searchQuery) { setURL("search/" + encodeURIComponent(q)); document.title = "Search: " + q + " | RedHotDealz"; } else { setURL(""); }
+  applyFilters();
   document.getElementById('searchClear').style.display = q ? 'block' : 'none';
   if (!searchQuery) { showHomeView(); return; }
   const results = allProducts.filter(p =>
@@ -3471,6 +3479,65 @@ function fadeOutIn(elementId, callback) {
     callback();
     el.style.opacity = '1';
   }, 150);
+}
+
+
+/* ════════════════════════════════════════════════
+   FILTERS — price range, condition, sort
+═══════════════════════════════════════════════════ */
+function applyFilters() {
+  const sort      = document.getElementById('filterSort').value;
+  const condition = document.getElementById('filterCondition').value;
+  const minPrice  = parseFloat(document.getElementById('filterMinPrice').value) || 0;
+  const maxPrice  = parseFloat(document.getElementById('filterMaxPrice').value) || Infinity;
+  const search    = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+
+  let pool = activeCategory === 'all'
+    ? allProducts.filter(p => !p._hideFromStore)
+    : allProducts.filter(p => p.category === activeCategory && !p._hideFromStore);
+
+  // Search
+  if (search) {
+    pool = pool.filter(p =>
+      (p.name||'').toLowerCase().includes(search) ||
+      (p.brand||'').toLowerCase().includes(search) ||
+      (p.description||'').toLowerCase().includes(search)
+    );
+  }
+
+  // Condition
+  if (condition) pool = pool.filter(p => p.condition === condition);
+
+  // Price range
+  pool = pool.filter(p => p.price >= minPrice && p.price <= maxPrice);
+
+  // Sort
+  if (sort === 'price_low')  pool.sort((a,b) => a.price - b.price);
+  if (sort === 'price_high') pool.sort((a,b) => b.price - a.price);
+  if (sort === 'discount')   pool.sort((a,b) => {
+    const da = a.retail_price ? (a.retail_price - a.price) / a.retail_price : 0;
+    const db = b.retail_price ? (b.retail_price - b.price) / b.retail_price : 0;
+    return db - da;
+  });
+  if (sort === 'newest')  pool.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  if (sort === 'views')   pool.sort((a,b) => (b.views||0) - (a.views||0));
+
+  // Update count
+  const countEl = document.getElementById('filterResultCount');
+  if (countEl) countEl.textContent = pool.length + ' item' + (pool.length !== 1 ? 's' : '');
+
+  renderGrid(pool);
+}
+
+function clearFilters() {
+  document.getElementById('filterSort').value = 'default';
+  document.getElementById('filterCondition').value = '';
+  document.getElementById('filterMinPrice').value = '';
+  document.getElementById('filterMaxPrice').value = '';
+  if (document.getElementById('searchInput')) document.getElementById('searchInput').value = '';
+  const countEl = document.getElementById('filterResultCount');
+  if (countEl) countEl.textContent = '';
+  applyFilters();
 }
 
 function showAbout() {
