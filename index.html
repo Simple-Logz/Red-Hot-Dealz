@@ -1671,12 +1671,14 @@ async function loadProducts() {
     } else {
       allProducts = DEMO_PRODUCTS;
     }
-    showHomeView(); // always start on Hot Deals home view
+    showHomeView();
   } catch(e) {
     console.error('Load error:', e);
     allProducts = DEMO_PRODUCTS;
     showHomeView();
   }
+  // Open admin AFTER Supabase is fully ready
+  if (window.adminPending) { window.adminPending = false; openAdmin(); }
 }
 
 /* ════════════════════════════════════════════════
@@ -1908,6 +1910,12 @@ async function publishProduct() {
   if (!category) { showToast('Step 1: Please choose a category.', 'error'); return; }
   if (!name)     { showToast('Step 2: Please enter a product name.', 'error'); return; }
   if (!priceRaw || isNaN(price) || price <= 0) { showToast('Step 3: Please enter a valid price.', 'error'); return; }
+
+  // Check Supabase is ready
+  if (!isSupabaseConfigured || !supabase) {
+    showToast('Database not connected. Please refresh the page and try again.', 'error');
+    return;
+  }
 
   const btn = document.getElementById('publishBtn');
   btn.disabled = true;
@@ -2340,7 +2348,8 @@ document.addEventListener('touchmove', function(e) {
    Users visiting the normal URL see nothing.
 ═══════════════════════════════════════════════════ */
 if (new URLSearchParams(window.location.search).get('admin') === 'open') {
-  openAdmin();
+  // Wait for Supabase to initialise before opening admin
+  window.adminPending = true;
 }
 
 /* ════════════════════════════════════════════════
