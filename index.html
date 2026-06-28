@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0" />
 <title>RedHotDealz — Brand New Products Up to 80% Off | Overstock Deals</title>
   <!-- ═══ SEO META TAGS ═══════════════════════════════════ -->
-  <meta name="description" content="RedHotDealz — Brand new overstock products at up to 70% off retail. Phones, TVs, laptops, appliances, fashion and more. Genuine products. USPS shipping. Shop now at redhotdealz.com">
+  <meta name="description" content="RedHotDealz — Brand new overstock products at up to 50% off retail. Phones, TVs, laptops, appliances, fashion and more. Genuine products. USPS shipping. Shop now at redhotdealz.com">
   <meta name="keywords" content="discount store, overstock deals, brand new products cheap, cheap electronics, discount phones, discount laptops, liquidation deals, cheap TVs, discount appliances, RedHotDealz">
   <meta name="author" content="RedHotDealz">
   <meta name="robots" content="index, follow">
@@ -1181,7 +1181,7 @@
     </span>
     <span class="trust-item">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.5" fill="#111" stroke="none"/></svg>
-      Up to 70% Off
+      Up to 50% Off
     </span>
   </div>
   </div><!-- /trust-row -->
@@ -1802,10 +1802,7 @@ function initSupabase() {
   }
 }
 
-function loadSupabaseThenInit() {
-  handleURLOnLoad();
-  loadProducts();
-}
+function loadSupabaseThenInit() { handleURLOnLoad(); loadProducts(); }
 
 /* ════════════════════════════════════════════════
    STATE
@@ -1913,7 +1910,7 @@ function showHomeView(page) {
   activeCategory = 'all';
   isHomeView = true;
   if (page !== undefined) currentPage = page;
-  setURL(currentPage > 0 ? "home?page=" + currentPage : ""); document.title = "RedHotDealz — Brand New Products. Up to 70% Off.";
+  setURL(currentPage > 0 ? "home?page=" + currentPage : ""); document.title = "RedHotDealz — Brand New Products. Up to 50% Off.";
 
   const pool = allProducts.filter(p => !p.sold);
   const totalPages = Math.ceil(pool.length / HOME_LIMIT);
@@ -2020,31 +2017,25 @@ function renderGrid(products) {
 ═══════════════════════════════════════════════════ */
 async function loadProducts() {
   try {
-    const res = await fetch(SUPABASE_URL + '/rest/v1/products?order=sort_order.asc,created_at.desc', {
-      headers: {
-        'apikey': SUPABASE_ANON,
-        'Authorization': 'Bearer ' + SUPABASE_ANON
-      }
+    const res = await fetch(SUPABASE_URL+'/rest/v1/products?order=sort_order.asc,created_at.desc',{
+      headers:{'apikey':SUPABASE_ANON,'Authorization':'Bearer '+SUPABASE_ANON}
     });
-    if (res.ok) {
-      allProducts = await res.json() || [];
-    } else {
-      allProducts = DEMO_PRODUCTS;
-    }
-  } catch(e) {
-    allProducts = DEMO_PRODUCTS;
+    allProducts = res.ok ? (await res.json()||[]) : DEMO_PRODUCTS;
+  } catch(e){ allProducts = DEMO_PRODUCTS; }
+  if (window.pendingHash) { routeFromHash(window.pendingHash); window.pendingHash=null; }
+  else showHomeView();
+  if (window.adminPending) { window.adminPending=false; openAdmin(); }
+  if (window.paymentSuccess) {
+    window.paymentSuccess=false;
+    cart=[]; updateCartUI();
+    setTimeout(()=>showToast('Payment successful! Thank you for your order.','success'),500);
   }
-
-  // Show the right view based on hash
-  var hash = window.location.hash.replace('#', '');
-  if (hash) {
-    routeFromHash(hash);
-  } else {
-    showHomeView();
+  if (window.paymentCancelled) {
+    window.paymentCancelled=false;
+    setTimeout(()=>showToast('Payment cancelled. Your cart is still saved.','error'),500);
   }
-
-  if (window.adminPending) { window.adminPending = false; openAdmin(); }
 }
+
 
 /* ════════════════════════════════════════════════
    PRODUCT MODAL
@@ -3580,7 +3571,7 @@ function setURL(hash) {
   if (hash === '' || hash === null) {
     // Home — clear hash, show clean domain
     history.pushState(null, '', window.location.pathname);
-    document.title = 'RedHotDealz — Brand New Products. Up to 70% Off.';
+    document.title = 'RedHotDealz — Brand New Products. Up to 50% Off.';
   } else {
     history.pushState(null, '', '#' + hash);
   }
