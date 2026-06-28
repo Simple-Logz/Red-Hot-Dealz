@@ -2164,7 +2164,9 @@ async function loadAdminProducts() {
         status = '● Active'; statusColor = '#16a34a'; statusBg = '#f0fdf4';
       }
 
-      return `<div class="admin-product-row" id="row-${p.id}">
+      return `<div class="admin-product-row" id="row-${p.id}" draggable="true" data-id="${p.id}"
+        ondragstart="dragStart(event)" ondragover="dragOver2(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
+        <div style="font-size:22px;color:#ccc;padding:0 10px 0 0;cursor:grab;flex-shrink:0;user-select:none">☰</div>
         <div class="admin-product-thumb">${thumb}</div>
         <div class="admin-product-info">
           <div class="admin-product-name">${p.name} ${hotBadge}</div>
@@ -2179,9 +2181,16 @@ async function loadAdminProducts() {
             <span style="font-size:11px;font-weight:600;color:${statusColor};background:${statusBg};padding:2px 8px;border-radius:4px">${status}</span>
           </div>
         </div>
-        <button class="btn-delete" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g, "\\'")}')" title="Delete">✕</button>
+        <button class="btn-delete" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g, "\\'")}')" title="Delete" style="flex-shrink:0">✕</button>
       </div>`;
     }).join('');
+
+    // Add hint above list
+    list.insertAdjacentHTML('afterbegin', '<div style="font-size:12px;color:#aaa;text-align:center;padding:8px 0 4px;border-bottom:1px solid #f0f0f0;margin-bottom:8px">☰ Drag products up or down to reorder — order reflects on your store</div>');
+
+    // Initialise touch drag support
+    initDragDrop();
+
   } catch(e) {
     list.innerHTML = `<div style="color:var(--flash);text-align:center;padding:40px">Error: ${e.message}</div>`;
   }
