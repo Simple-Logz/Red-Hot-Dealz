@@ -1794,6 +1794,7 @@ function filterCategory(catId) {
   activeCategory = catId;
   isHomeView = false;
   currentPage = 0;
+  setURL(catId === 'all' ? {} : {category: catId});
   const cat = CATEGORIES.find(c => c.id === catId);
   const pool = allProducts.filter(p => !p.sold);
   const filtered = catId === 'all' ? pool : pool.filter(p => p.category === catId);
@@ -1812,6 +1813,7 @@ function showHomeView(page) {
   activeCategory = 'all';
   isHomeView = true;
   if (page !== undefined) currentPage = page;
+  setURL(currentPage > 0 ? {page: currentPage} : {});
 
   const pool = allProducts.filter(p => !p.sold);
   const totalPages = Math.ceil(pool.length / HOME_LIMIT);
@@ -1901,7 +1903,6 @@ function renderGrid(products) {
           ${p.retail_price ? `<div class="card-retail">$${Number(p.retail_price).toFixed(2)}</div>` : ''}
         </div>
         ${p.sold ? `<div style="font-size:12px;color:#999;margin-top:8px;font-weight:600">This item has been sold</div>` : `<button class="card-cta" onclick="event.stopPropagation();openModal(${p.id})">View Deal</button><button class="btn-add-cart" onclick="event.stopPropagation();addToCart(${p.id})">Add to Cart</button>`}
-        <button class="btn-reviews" onclick="event.stopPropagation();showReviews(${p.id})">&#9734; Reviews${p.review_count > 0 ? " (" + p.review_count + ")" : ""}</button>
       </div>
     </div>`;
   }).join('');
@@ -1932,7 +1933,24 @@ async function loadProducts() {
     allProducts = DEMO_PRODUCTS;
   }
 
-  showHomeView();
+  // Handle pending URL params
+  if (window.pendingProductId) {
+    const pid = window.pendingProductId;
+    window.pendingProductId = null;
+    showHomeView();
+    setTimeout(() => openModal(pid), 300);
+  } else if (window.pendingCategory) {
+    const cat = window.pendingCategory;
+    window.pendingCategory = null;
+    filterCategory(cat);
+  } else if (window.pendingSearch) {
+    const s = window.pendingSearch;
+    window.pendingSearch = null;
+    if (document.getElementById('searchInput')) document.getElementById('searchInput').value = s;
+    handleSearch(s);
+  } else {
+    showHomeView();
+  }
   // Open admin AFTER products are loaded
   if (window.adminPending) { window.adminPending = false; openAdmin(); }
 }
@@ -1943,6 +1961,7 @@ async function loadProducts() {
 function openModal(id) {
   const p = allProducts.find(x => x.id === id);
   if (!p) return;
+  setURL({product: id});
 
   // Track view via REST API
   fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
@@ -1997,6 +2016,8 @@ function openModal(id) {
 function closeModal() {
   document.getElementById('productModal').classList.add('hidden');
   document.body.style.overflow = '';
+  // Restore previous URL
+  window.history.back();
 }
 document.getElementById('productModal').addEventListener('click', e => {
   if (e.target === document.getElementById('productModal')) closeModal();
@@ -2745,6 +2766,7 @@ let searchQuery = '';
 
 function handleSearch(q) {
   searchQuery = q.toLowerCase().trim();
+  setURL(searchQuery ? {search: q} : {});
   document.getElementById('searchClear').style.display = q ? 'block' : 'none';
   if (!searchQuery) { showHomeView(); return; }
   const results = allProducts.filter(p =>
@@ -3248,6 +3270,75 @@ function sendOrderNotification(customerName, customerPhone, productName, price) 
 
 
 
+
+/* ════════════════════════════════════════════════
+   URL ROUTING
+═══════════════════════════════════════════════════ */
+
+function setURL(params) {
+  const url = new URL(window.location.href);
+  // Clear existing route params
+  url.searchParams.delete('product');
+  url.searchParams.delete('category');
+  url.searchParams.delete('search');
+  url.searchParams.delete('page');
+  // Set new ones
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== null && v !== undefined) url.searchParams.set(k, v);
+  });
+  window.history.pushState({}, '', url.toString());
+}
+
+function readURL() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    product:  params.get('product'),
+    category: params.get('category'),
+    search:   params.get('search'),
+    page:     params.get('page'),
+    admin:    params.get('admin'),
+    payment:  params.get('payment')
+  };
+}
+
+function handleURLOnLoad() {
+  const p = readURL();
+  if (p.admin === 'open') { window.adminPending = true; return; }
+  if (p.payment === 'success') { setTimeout(() => showToast('Payment successful! Thank you for your order.', 'success'), 500); cart = []; updateCartUI(); }
+  if (p.payment === 'cancelled') { setTimeout(() => showToast('Payment cancelled.', 'error'), 500); }
+  if (p.product) {
+    // Will open product modal after products load
+    window.pendingProductId = parseInt(p.product);
+  }
+  if (p.category) {
+    window.pendingCategory = p.category;
+  }
+  if (p.search) {
+    window.pendingSearch = p.search;
+  }
+  if (p.page) {
+    currentPage = parseInt(p.page) || 0;
+  }
+}
+
+// Handle browser back/forward buttons
+window.addEventListener('popstate', () => {
+  const p = readURL();
+  if (p.product) {
+    openModal(parseInt(p.product));
+  } else if (p.category) {
+    filterCategory(p.category);
+  } else if (p.search) {
+    document.getElementById('searchInput').value = p.search;
+    handleSearch(p.search);
+  } else {
+    currentPage = parseInt(p.page) || 0;
+    showHomeView();
+  }
+});
+
+
+handleURLOnLoad();
 loadSupabaseThenInit();
 </script>
 
