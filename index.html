@@ -1895,59 +1895,66 @@ function removeMedia(idx) {
    ADMIN — PUBLISH PRODUCT
 ═══════════════════════════════════════════════════ */
 async function publishProduct() {
-  const category  = (document.getElementById('uploadCategory').value || '').trim();
-  const name      = (document.getElementById('uploadName').value || '').trim();
-  const brand     = (document.getElementById('uploadBrand').value || '').trim();
-  const priceRaw  = document.getElementById('uploadPrice').value;
-  const price     = parseFloat(priceRaw);
-  const retail    = parseFloat(document.getElementById('uploadRetail').value) || null;
-  const desc      = (document.getElementById('uploadDesc').value || '').trim();
-  const isHot     = document.getElementById('uploadHotDeal').checked;
-  const weight    = document.getElementById('uploadWeight') ? (document.getElementById('uploadWeight').value || 'under1') : 'under1';
-  const condition = document.getElementById('uploadCondition') ? (document.getElementById('uploadCondition').value || 'Brand New') : 'Brand New';
-  const stock     = document.getElementById('uploadStock') ? (parseInt(document.getElementById('uploadStock').value) || 1) : 1;
+  const g = id => document.getElementById(id);
+  const category  = (g('uploadCategory').value || '').trim();
+  const name      = (g('uploadName').value || '').trim();
+  const brand     = (g('uploadBrand').value || '').trim();
+  const price     = parseFloat(g('uploadPrice').value);
+  const retail    = parseFloat(g('uploadRetail').value) || null;
+  const desc      = (g('uploadDesc').value || '').trim();
+  const isHot     = g('uploadHotDeal').checked;
+  const weight    = (g('uploadWeight') && g('uploadWeight').value) ? g('uploadWeight').value : 'under1';
+  const condition = (g('uploadCondition') && g('uploadCondition').value) ? g('uploadCondition').value : 'Brand New';
+  const stock     = (g('uploadStock') && g('uploadStock').value) ? parseInt(g('uploadStock').value) : 1;
 
-  if (!category) { showToast('Step 1: Please choose a category.', 'error'); return; }
-  if (!name)     { showToast('Step 2: Please enter a product name.', 'error'); return; }
-  if (!priceRaw || isNaN(price) || price <= 0) { showToast('Step 3: Please enter a valid price.', 'error'); return; }
+  if (!category) { showToast('Please choose a category first.', 'error'); return; }
+  if (!name)     { showToast('Please enter a product name.', 'error'); return; }
+  if (!price || isNaN(price) || price <= 0) { showToast('Please enter a valid price.', 'error'); return; }
 
-  // Check Supabase is ready
-  if (!isSupabaseConfigured || !supabase) {
-    showToast('Database not connected. Please refresh the page and try again.', 'error');
-    return;
-  }
-
-  const btn = document.getElementById('publishBtn');
+  const btn = g('publishBtn');
   btn.disabled = true;
   btn.textContent = 'Publishing…';
 
   try {
     let mediaUrls = [];
 
-    // Upload photos if any
+    // Upload photos if any — use REST API directly
     if (mediaFiles && mediaFiles.length > 0) {
       for (let i = 0; i < mediaFiles.length; i++) {
-        btn.textContent = `Uploading photo ${i+1} of ${mediaFiles.length}…`;
+        btn.textContent = `Uploading photo ${i+1}…`;
         const file = mediaFiles[i];
-        const ext  = file.name.split('.').pop().toLowerCase();
-        const filePath = `products/${Date.now()}_${i}.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from('redhotdealz-media')
-          .upload(filePath, file, { upsert: true });
-        if (upErr) {
-          showToast(`Photo upload failed: ${upErr.message}`, 'error');
+        const ext = file.name.split('.').pop().toLowerCase();
+        const filePath = `products/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+
+        const uploadRes = await fetch(
+          `${SUPABASE_URL}/storage/v1/object/redhotdealz-media/${filePath}`,
+          {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_ANON,
+              'Authorization': `Bearer ${SUPABASE_ANON}`,
+              'Content-Type': file.type,
+              'x-upsert': 'true'
+            },
+            body: file
+          }
+        );
+
+        if (!uploadRes.ok) {
+          const errTxt = await uploadRes.text();
+          showToast(`Photo upload failed: ${errTxt}`, 'error');
           btn.disabled = false; btn.textContent = 'Publish to Store';
           return;
         }
-        const { data: pubData } = supabase.storage.from('redhotdealz-media').getPublicUrl(filePath);
-        mediaUrls.push(pubData.publicUrl);
+
+        mediaUrls.push(`${SUPABASE_URL}/storage/v1/object/public/redhotdealz-media/${filePath}`);
       }
     }
 
-    btn.textContent = 'Saving to database…';
+    btn.textContent = 'Saving product…';
 
-    // Save via REST API
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+    // Insert product via REST API
+    const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1957,7 +1964,7 @@ async function publishProduct() {
       },
       body: JSON.stringify({
         name, brand, category,
-        price,
+        price: parseFloat(price),
         retail_price: retail,
         description: desc,
         media_urls: mediaUrls,
@@ -1968,37 +1975,109 @@ async function publishProduct() {
       })
     });
 
-    if (!res.ok) {
-      const errBody = await res.text();
-      showToast(`Failed to save: ${errBody}`, 'error');
+    if (!insertRes.ok) {
+      const errTxt = await insertRes.text();
+      showToast(`Could not save product: ${errTxt}`, 'error');
       btn.disabled = false; btn.textContent = 'Publish to Store';
       return;
     }
 
-    sessionStorage.removeItem('rhd_draft');
+    // Clear draft
+    try { localStorage.removeItem('rhd_draft'); } catch(e){}
+    try { sessionStorage.removeItem('rhd_draft'); } catch(e){}
+
     showToast(`"${name}" is now live on your store!`, 'success');
     resetUploadForm();
-    setTimeout(() => loadProducts(), 800);
+    setTimeout(() => loadProducts(), 1000);
 
   } catch(err) {
     showToast(`Error: ${err.message}`, 'error');
-    console.error(err);
     btn.disabled = false; btn.textContent = 'Publish to Store';
   }
 }
 
 function resetUploadForm() {
-  document.getElementById('uploadCategory').value = '';
-  document.getElementById('uploadName').value = '';
-  document.getElementById('uploadBrand').value = '';
-  document.getElementById('uploadPrice').value = '';
-  document.getElementById('uploadRetail').value = '';
-  document.getElementById('uploadDesc').value = '';
-  document.getElementById('uploadHotDeal').checked = false;
-  document.getElementById('uploadWeight').value = '';
-  document.getElementById('mediaPreviewGrid').innerHTML = '';
+  const fields = ['uploadCategory','uploadName','uploadBrand','uploadPrice','uploadRetail','uploadDesc','uploadWeight','uploadCondition'];
+  fields.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  const hot = document.getElementById('uploadHotDeal'); if(hot) hot.checked = false;
+  const stock = document.getElementById('uploadStock'); if(stock) stock.value = '1';
+  const grid = document.getElementById('mediaPreviewGrid'); if(grid) grid.innerHTML = '';
   mediaFiles = [];
+  updateDiscountPreview();
 }
+
+/* ════════════════════════════════════════════════
+   DRAFT SAVE / RESTORE
+═══════════════════════════════════════════════════ */
+function saveDraft() {
+  try {
+    const g = id => document.getElementById(id);
+    const draft = {
+      category:  g('uploadCategory') ? g('uploadCategory').value : '',
+      name:      g('uploadName') ? g('uploadName').value : '',
+      brand:     g('uploadBrand') ? g('uploadBrand').value : '',
+      price:     g('uploadPrice') ? g('uploadPrice').value : '',
+      retail:    g('uploadRetail') ? g('uploadRetail').value : '',
+      desc:      g('uploadDesc') ? g('uploadDesc').value : '',
+      weight:    g('uploadWeight') ? g('uploadWeight').value : '',
+      condition: g('uploadCondition') ? g('uploadCondition').value : '',
+      stock:     g('uploadStock') ? g('uploadStock').value : '1',
+      isHot:     g('uploadHotDeal') ? g('uploadHotDeal').checked : false,
+      savedAt:   new Date().toLocaleString()
+    };
+    localStorage.setItem('rhd_draft', JSON.stringify(draft));
+    showToast(`Draft saved for "${draft.name || 'product'}" — come back anytime.`, 'success');
+  } catch(e) {
+    showToast('Draft save failed: ' + e.message, 'error');
+  }
+}
+
+function restoreDraft() {
+  try {
+    const raw = localStorage.getItem('rhd_draft');
+    if (!raw) { showToast('No draft found.', 'error'); return; }
+    const d = JSON.parse(raw);
+    const g = id => document.getElementById(id);
+    if (g('uploadCategory') && d.category) g('uploadCategory').value = d.category;
+    if (g('uploadName') && d.name) g('uploadName').value = d.name;
+    if (g('uploadBrand') && d.brand) g('uploadBrand').value = d.brand;
+    if (g('uploadPrice') && d.price) g('uploadPrice').value = d.price;
+    if (g('uploadRetail') && d.retail) g('uploadRetail').value = d.retail;
+    if (g('uploadDesc') && d.desc) g('uploadDesc').value = d.desc;
+    if (g('uploadWeight') && d.weight) g('uploadWeight').value = d.weight;
+    if (g('uploadCondition') && d.condition) g('uploadCondition').value = d.condition;
+    if (g('uploadStock') && d.stock) g('uploadStock').value = d.stock;
+    if (g('uploadHotDeal')) g('uploadHotDeal').checked = d.isHot || false;
+    updateDiscountPreview();
+    const banner = document.getElementById('draftBanner');
+    if (banner) banner.classList.add('hidden');
+    showToast(`Draft restored — saved ${d.savedAt}`, 'success');
+  } catch(e) {
+    showToast('Could not restore draft: ' + e.message, 'error');
+  }
+}
+
+function discardDraft() {
+  try { localStorage.removeItem('rhd_draft'); } catch(e){}
+  const banner = document.getElementById('draftBanner');
+  if (banner) banner.classList.add('hidden');
+  showToast('Draft discarded.', 'success');
+}
+
+function checkForDraft() {
+  try {
+    const raw = localStorage.getItem('rhd_draft');
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (!d.name && !d.price) return;
+    const banner = document.getElementById('draftBanner');
+    if (!banner) return;
+    banner.innerHTML = `<span style="flex:1">Unsaved draft: <strong>${d.name || 'Unnamed product'}</strong> — saved ${d.savedAt}</span><button onclick="restoreDraft()" style="background:#cc0000;color:white;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;white-space:nowrap">Restore</button><button onclick="discardDraft()" style="background:none;border:1px solid #ddd;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;margin-left:6px;white-space:nowrap">Discard</button>`;
+    banner.classList.remove('hidden');
+  } catch(e) {}
+}
+
+
 
 /* ════════════════════════════════════════════════
    ADMIN — PRODUCTS LIST
@@ -2269,68 +2348,6 @@ function showTerms() {
 /* ════════════════════════════════════════════════
    DRAFT SAVE / RESTORE
 ═══════════════════════════════════════════════════ */
-function saveDraft() {
-  const draft = {
-    category:  document.getElementById('uploadCategory').value,
-    name:      document.getElementById('uploadName').value,
-    brand:     document.getElementById('uploadBrand').value,
-    price:     document.getElementById('uploadPrice').value,
-    retail:    document.getElementById('uploadRetail').value,
-    desc:      document.getElementById('uploadDesc').value,
-    weight:    document.getElementById('uploadWeight') ? document.getElementById('uploadWeight').value : '',
-    condition: document.getElementById('uploadCondition') ? document.getElementById('uploadCondition').value : '',
-    stock:     document.getElementById('uploadStock') ? document.getElementById('uploadStock').value : '1',
-    isHot:     document.getElementById('uploadHotDeal').checked,
-    savedAt:   new Date().toLocaleString()
-  };
-  sessionStorage.setItem('rhd_draft', JSON.stringify(draft));
-  showToast('Draft saved. You can come back to this anytime.', 'success');
-}
-
-function restoreDraft() {
-  const raw = sessionStorage.getItem('rhd_draft');
-  if (!raw) return;
-  try {
-    const d = JSON.parse(raw);
-    if (document.getElementById('uploadCategory')) document.getElementById('uploadCategory').value = d.category || '';
-    if (document.getElementById('uploadName')) document.getElementById('uploadName').value = d.name || '';
-    if (document.getElementById('uploadBrand')) document.getElementById('uploadBrand').value = d.brand || '';
-    if (document.getElementById('uploadPrice')) document.getElementById('uploadPrice').value = d.price || '';
-    if (document.getElementById('uploadRetail')) document.getElementById('uploadRetail').value = d.retail || '';
-    if (document.getElementById('uploadDesc')) document.getElementById('uploadDesc').value = d.desc || '';
-    if (document.getElementById('uploadWeight') && d.weight) document.getElementById('uploadWeight').value = d.weight;
-    if (document.getElementById('uploadCondition') && d.condition) document.getElementById('uploadCondition').value = d.condition;
-    if (document.getElementById('uploadStock') && d.stock) document.getElementById('uploadStock').value = d.stock;
-    if (document.getElementById('uploadHotDeal')) document.getElementById('uploadHotDeal').checked = d.isHot || false;
-    updateDiscountPreview();
-    showToast(`Draft restored from ${d.savedAt}`, 'success');
-  } catch(e) {
-    console.error('Draft restore error:', e);
-  }
-}
-
-function checkForDraft() {
-  const raw = sessionStorage.getItem('rhd_draft');
-  if (!raw) return;
-  try {
-    const d = JSON.parse(raw);
-    if (d.name) {
-      const draftBanner = document.getElementById('draftBanner');
-      if (draftBanner) {
-        draftBanner.innerHTML = `<span>You have an unsaved draft: <strong>${d.name}</strong> — saved ${d.savedAt}</span><button onclick="restoreDraft()" style="margin-left:12px;background:#cc0000;color:white;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px">Restore Draft</button><button onclick="discardDraft()" style="margin-left:8px;background:none;border:1px solid #ccc;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px">Discard</button>`;
-        draftBanner.classList.remove('hidden');
-      }
-    }
-  } catch(e) {}
-}
-
-function discardDraft() {
-  sessionStorage.removeItem('rhd_draft');
-  const draftBanner = document.getElementById('draftBanner');
-  if (draftBanner) draftBanner.classList.add('hidden');
-  showToast('Draft discarded.', 'success');
-}
-
 /* ════════════════════════════════════════════════
    LOCK — prevent pinch zoom & page rotation drift
 ═══════════════════════════════════════════════════ */
