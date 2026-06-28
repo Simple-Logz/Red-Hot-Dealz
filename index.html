@@ -941,6 +941,104 @@
   .btn-login:hover { background: var(--flash-dark); }
   .login-error { font-size: 13px; color: var(--flash); text-align: center; }
 
+
+  /* ─── PAGE TRANSITIONS ───────────────────────────────── */
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.97); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  /* Product grid fades in */
+  .product-grid { animation: fadeSlideUp .3s ease both; }
+
+  /* Each card staggers in */
+  .product-card {
+    animation: fadeSlideUp .35s ease both;
+  }
+  .product-card:nth-child(1)  { animation-delay: .03s; }
+  .product-card:nth-child(2)  { animation-delay: .06s; }
+  .product-card:nth-child(3)  { animation-delay: .09s; }
+  .product-card:nth-child(4)  { animation-delay: .12s; }
+  .product-card:nth-child(5)  { animation-delay: .15s; }
+  .product-card:nth-child(6)  { animation-delay: .18s; }
+  .product-card:nth-child(7)  { animation-delay: .21s; }
+  .product-card:nth-child(8)  { animation-delay: .24s; }
+
+  /* Modal entrance */
+  .modal {
+    animation: scaleIn .22s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* Modal overlay fade */
+  .modal-overlay:not(.hidden) {
+    animation: fadeIn .2s ease both;
+  }
+
+  /* Reviews panel */
+  .reviews-panel {
+    transition: transform .32s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  /* Section title transition */
+  .section-header {
+    animation: fadeIn .25s ease both;
+  }
+
+  /* Category bar items */
+  .menu-cat-item {
+    transition: background .15s ease, color .15s ease, transform .1s ease;
+  }
+  .menu-cat-item:active { transform: scale(0.97); }
+
+  /* Nav menu slide */
+  .nav-menu {
+    transition: opacity .2s ease, transform .2s ease, visibility .2s;
+  }
+
+  /* Cart drawer */
+  .cart-drawer {
+    transition: transform .28s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  /* Buttons */
+  .card-cta, .btn-add-cart, .btn-order, .btn-publish, .btn-checkout {
+    transition: all .15s ease;
+  }
+  .card-cta:active, .btn-add-cart:active, .btn-order:active,
+  .btn-publish:active, .btn-checkout:active {
+    transform: scale(0.98);
+  }
+
+  /* Product card hover */
+  .product-card {
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  }
+
+  /* Toast notification */
+  .toast {
+    transition: opacity .25s ease, transform .25s ease;
+  }
+
+  /* Admin product rows */
+  .admin-product-row {
+    transition: background .15s ease, box-shadow .15s ease;
+  }
+  .admin-product-row:hover {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  /* Smooth scroll everywhere */
+  html { scroll-behavior: smooth; }
+
+
   /* ─── FOOTER ──────────────────────────────────────────── */
   footer {
     background: var(--ink); color: #666;
@@ -1870,6 +1968,11 @@ function getCatMeta(catId) {
 
 function renderGrid(products) {
   const grid = document.getElementById('productGrid');
+  grid.style.transition = 'opacity .15s ease';
+  grid.style.opacity = '0';
+  setTimeout(() => {
+    grid.style.opacity = '1';
+  }, 150);
   if (!products.length) {
     grid.innerHTML = `<div class="empty-state">
       <p>No products here yet. Check back soon.</p>
@@ -3300,6 +3403,32 @@ async function submitReview() {
     alert('Error: ' + e.message);
     btn.disabled = false; btn.textContent = 'Post Review';
   }
+}
+
+
+/* ════════════════════════════════════════════════
+   SMOOTH TRANSITIONS
+═══════════════════════════════════════════════════ */
+function fadeOutGrid(callback) {
+  const grid = document.getElementById('productGrid');
+  if (!grid) { callback(); return; }
+  grid.style.transition = 'opacity .15s ease';
+  grid.style.opacity = '0';
+  setTimeout(() => {
+    callback();
+    grid.style.opacity = '1';
+  }, 150);
+}
+
+function fadeOutIn(elementId, callback) {
+  const el = document.getElementById(elementId);
+  if (!el) { callback(); return; }
+  el.style.transition = 'opacity .15s ease';
+  el.style.opacity = '0';
+  setTimeout(() => {
+    callback();
+    el.style.opacity = '1';
+  }, 150);
 }
 
 function showAbout() {
