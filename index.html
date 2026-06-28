@@ -1890,7 +1890,7 @@ function filterCategory(catId) {
   isHomeView = false;
   if (catId === "all") { setURL("all-products"); document.title = "All Products | RedHotDealz"; } else { setURL("category/" + catId); document.title = catId.replace(/_/g," ").replace(/\b\w/g,l=>l.toUpperCase()) + " | RedHotDealz"; }
   const cat = CATEGORIES.find(c => c.id === catId);
-  const pool = allProducts.filter(p => !p.sold);
+  const pool = allProducts.filter(p => !p._hideFromStore);
   const filtered = catId === 'all' ? pool : pool.filter(p => p.category === catId);
 
   document.getElementById('sectionTitle').textContent = catId === 'all' ? 'All Products' : (cat ? cat.label : 'Products');
@@ -1926,7 +1926,7 @@ function showHotDealsView() {
   isHomeView = false;
   setURL('hot-deals');
   document.title = 'Hot Deals | RedHotDealz';
-  const hotDeals = allProducts.filter(p => p.hot_deal && !p.sold);
+  const hotDeals = allProducts.filter(p => p.hot_deal && !p._hideFromStore);
 
   document.getElementById('sectionTitle').textContent = '✦ Hot Deals';
   document.getElementById('sectionCount').textContent = hotDeals.length
@@ -2026,6 +2026,17 @@ async function loadProducts() {
   }
 
   console.log('RHD: Calling showHomeView...');
+  // Hide products sold more than 24h ago from store (stays in admin)
+  const now24 = new Date();
+  allProducts.forEach(p => {
+    if (p.sold && p.sold_at) {
+      const hrs = (now24 - new Date(p.sold_at)) / (1000 * 60 * 60);
+      p._hideFromStore = hrs >= 24;
+    } else {
+      p._hideFromStore = false;
+    }
+  });
+
   if (window.pendingHash) {
     routeFromHash(window.pendingHash);
     window.pendingHash = null;
@@ -2037,8 +2048,35 @@ async function loadProducts() {
   if (window.adminPending) { window.adminPending = false; openAdmin(); }
   if (window.paymentSuccess) {
     window.paymentSuccess = false;
+    // Mark all carted items as sold immediately
+    const lastCart = JSON.parse(localStorage.getItem('rhd_last_cart') || '[]');
+    for (const item of lastCart) {
+      const soldAt = new Date().toISOString();
+      await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + item.id, {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json','apikey':SUPABASE_ANON,'Authorization':'Bearer '+SUPABASE_ANON},
+        body: JSON.stringify({ sold: true, sold_at: soldAt })
+      }).catch(()=>{});
+      // Mark in local state
+      const lp = allProducts.find(x => x.id === item.id);
+      if (lp) { lp.sold = true; lp.sold_at = soldAt; }
+    }
     cart = []; updateCartUI();
     setTimeout(() => showToast('Payment successful! Thank you for your order.', 'success'), 500);
+    // Show review prompt
+    if (lastCart.length > 0) {
+      setTimeout(() => {
+        const item = lastCart[0];
+        if (confirm('Thank you for your order!\n\nWould you like to leave a review for:\n"' + item.name + '"?')) {
+          openModal(item.id);
+          setTimeout(() => {
+            const el = document.getElementById('inlineReviewName');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 600);
+        }
+        localStorage.removeItem('rhd_last_cart');
+      }, 2000);
+    }
   }
   if (window.paymentCancelled) {
     window.paymentCancelled = false;
@@ -2285,16 +2323,6 @@ async function submitOrder(productId) {
     // Mark sold in local state immediately
     const localProduct = allProducts.find(x => x.id === productId);
     if (localProduct) { localProduct.sold = true; localProduct.sold_at = soldAt; }
-
-    // Auto-remove from site after 24 hours
-    const msUntilRemoval = 24 * 60 * 60 * 1000;
-    setTimeout(() => {
-      const idx = allProducts.findIndex(x => x.id === productId);
-      if (idx > -1) allProducts.splice(idx, 1);
-      if (isHomeView) showHomeView();
-      else if (activeCategory === 'hot') showHotDealsView();
-      else filterCategory(activeCategory);
-    }, msUntilRemoval);
 
     // Close modal, refresh grid to show sold state
     closeModal();
