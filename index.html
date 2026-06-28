@@ -113,19 +113,17 @@
 
   /* ─── STICKY HEADER ──────────────────────────────────── */
   .sticky-header {
-    position: fixed;
+    position: sticky;
     top: 0;
-    left: 0;
-    right: 0;
     z-index: 99;
-    background: transparent;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow: 0 2px 24px rgba(0,0,0,0.1);
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
   }
 
   nav {
-    position: relative; top: auto; z-index: 100;
+    position: relative; z-index: 100;
     background: rgba(255,255,255,0.85);
     border-bottom: 4px solid #cc0000;
     padding: 0 28px;
@@ -1021,9 +1019,6 @@
   </div><!-- /trust-row -->
   </div><!-- /sticky-header -->
 
-  <!-- CONTENT SPACER — pushes content below fixed header -->
-  <div id="headerSpacer"></div>
-
   <!-- SEARCH -->
   <div class="search-wrap">
     <div class="search-input-wrap">
@@ -1292,7 +1287,7 @@
           <button class="btn-publish" id="publishBtn" onclick="publishProduct()">
             Publish to Store
           </button>
-          <button onclick="saveDraft()" style="width:100%;margin-top:10px;padding:13px;border-radius:12px;border:1.5px solid #e5e7eb;background:white;font-family:var(--font-head);font-size:15px;font-weight:600;color:#6b7280;cursor:pointer">
+          <button onclick="saveDraft()" style="width:100%;margin-top:10px;padding:13px;border-radius:12px;border:1.5px solid #cc0000;background:white;font-family:var(--font-head);font-size:15px;font-weight:600;color:#cc0000;cursor:pointer">
             Save as Draft
           </button>
         </div>
@@ -1898,103 +1893,88 @@ function removeMedia(idx) {
    ADMIN — PUBLISH PRODUCT
 ═══════════════════════════════════════════════════ */
 async function publishProduct() {
-  const category  = document.getElementById('uploadCategory').value;
-  const name      = document.getElementById('uploadName').value.trim();
-  const brand     = document.getElementById('uploadBrand').value.trim();
-  const price     = parseFloat(document.getElementById('uploadPrice').value);
+  const category  = (document.getElementById('uploadCategory').value || '').trim();
+  const name      = (document.getElementById('uploadName').value || '').trim();
+  const brand     = (document.getElementById('uploadBrand').value || '').trim();
+  const priceRaw  = document.getElementById('uploadPrice').value;
+  const price     = parseFloat(priceRaw);
   const retail    = parseFloat(document.getElementById('uploadRetail').value) || null;
-  const desc      = document.getElementById('uploadDesc').value.trim();
+  const desc      = (document.getElementById('uploadDesc').value || '').trim();
   const isHot     = document.getElementById('uploadHotDeal').checked;
   const weight    = document.getElementById('uploadWeight') ? (document.getElementById('uploadWeight').value || 'under1') : 'under1';
   const condition = document.getElementById('uploadCondition') ? (document.getElementById('uploadCondition').value || 'Brand New') : 'Brand New';
-  const stock     = parseInt(document.getElementById('uploadStock') ? document.getElementById('uploadStock').value : 1) || 1;
+  const stock     = document.getElementById('uploadStock') ? (parseInt(document.getElementById('uploadStock').value) || 1) : 1;
 
-  if (!category) { showToast('Please choose a category.', 'error'); return; }
-  if (!name)     { showToast('Please enter a product name.', 'error'); return; }
-  if (!price || isNaN(price)) { showToast('Please enter a valid selling price.', 'error'); return; }
+  if (!category) { showToast('Step 1: Please choose a category.', 'error'); return; }
+  if (!name)     { showToast('Step 2: Please enter a product name.', 'error'); return; }
+  if (!priceRaw || isNaN(price) || price <= 0) { showToast('Step 3: Please enter a valid price.', 'error'); return; }
 
   const btn = document.getElementById('publishBtn');
-  btn.disabled = true; btn.textContent = 'Uploading…';
+  btn.disabled = true;
+  btn.textContent = 'Publishing…';
 
   try {
     let mediaUrls = [];
 
-    if (isSupabaseConfigured) {
-      // Upload photos first
-      for (const file of mediaFiles) {
-        btn.textContent = 'Uploading photos…';
-        const ext  = file.name.split('.').pop();
-        const filePath = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error: uploadErr } = await supabase.storage
+    // Upload photos if any
+    if (mediaFiles && mediaFiles.length > 0) {
+      for (let i = 0; i < mediaFiles.length; i++) {
+        btn.textContent = `Uploading photo ${i+1} of ${mediaFiles.length}…`;
+        const file = mediaFiles[i];
+        const ext  = file.name.split('.').pop().toLowerCase();
+        const filePath = `products/${Date.now()}_${i}.${ext}`;
+        const { error: upErr } = await supabase.storage
           .from('redhotdealz-media')
-          .upload(filePath, file, { cacheControl: '3600', upsert: true });
-        if (uploadErr) {
-          showToast(`Photo upload failed: ${uploadErr.message}`, 'error');
+          .upload(filePath, file, { upsert: true });
+        if (upErr) {
+          showToast(`Photo upload failed: ${upErr.message}`, 'error');
           btn.disabled = false; btn.textContent = 'Publish to Store';
           return;
         }
-        const { data: urlData } = supabase.storage.from('redhotdealz-media').getPublicUrl(filePath);
-        mediaUrls.push(urlData.publicUrl);
+        const { data: pubData } = supabase.storage.from('redhotdealz-media').getPublicUrl(filePath);
+        mediaUrls.push(pubData.publicUrl);
       }
+    }
 
-      btn.textContent = 'Saving product…';
+    btn.textContent = 'Saving to database…';
 
-      // Use direct REST API call to bypass any RLS issues
-      const productData = {
+    // Save via REST API
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
         name, brand, category,
-        price: parseFloat(price),
+        price,
         retail_price: retail,
         description: desc,
         media_urls: mediaUrls,
         published: true,
         hot_deal: isHot,
         sold: false,
-        weight,
-        condition,
-        stock
-      };
-
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_ANON,
-          'Authorization': `Bearer ${SUPABASE_ANON}`,
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify(productData)
-      });
-
-      if (!res.ok) {
-        const errText = await res.text();
-        showToast(`Save failed: ${errText}`, 'error');
-        btn.disabled = false; btn.textContent = 'Publish to Store';
-        return;
-      }
-
-      // Clear draft after successful publish
-      localStorage.removeItem('rhd_draft');
-      showToast(`"${name}" is now live on your store!`, 'success');
-
-    } else {
-      // Demo mode
-      const demo = {
-        id: Date.now(), name, brand, category,
-        price, retail_price: retail, description: desc,
-        media_urls: [], hot_deal: isHot, sold: false,
         weight, condition, stock
-      };
-      allProducts.unshift(demo);
-      showToast(`"${name}" added (demo mode — not saved to database).`, 'success');
+      })
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text();
+      showToast(`Failed to save: ${errBody}`, 'error');
+      btn.disabled = false; btn.textContent = 'Publish to Store';
+      return;
     }
 
+    sessionStorage.removeItem('rhd_draft');
+    showToast(`"${name}" is now live on your store!`, 'success');
     resetUploadForm();
-    await loadProducts();
+    setTimeout(() => loadProducts(), 800);
 
-  } catch(e) {
-    console.error('Publish error:', e);
-    showToast(`Something went wrong: ${e.message}`, 'error');
-  } finally {
+  } catch(err) {
+    showToast(`Error: ${err.message}`, 'error');
+    console.error(err);
     btn.disabled = false; btn.textContent = 'Publish to Store';
   }
 }
@@ -2295,12 +2275,12 @@ function saveDraft() {
     isHot:     document.getElementById('uploadHotDeal').checked,
     savedAt:   new Date().toLocaleString()
   };
-  localStorage.setItem('rhd_draft', JSON.stringify(draft));
+  sessionStorage.setItem('rhd_draft', JSON.stringify(draft));
   showToast('Draft saved. You can come back to this anytime.', 'success');
 }
 
 function restoreDraft() {
-  const raw = localStorage.getItem('rhd_draft');
+  const raw = sessionStorage.getItem('rhd_draft');
   if (!raw) return;
   try {
     const d = JSON.parse(raw);
@@ -2322,7 +2302,7 @@ function restoreDraft() {
 }
 
 function checkForDraft() {
-  const raw = localStorage.getItem('rhd_draft');
+  const raw = sessionStorage.getItem('rhd_draft');
   if (!raw) return;
   try {
     const d = JSON.parse(raw);
@@ -2337,7 +2317,7 @@ function checkForDraft() {
 }
 
 function discardDraft() {
-  localStorage.removeItem('rhd_draft');
+  sessionStorage.removeItem('rhd_draft');
   const draftBanner = document.getElementById('draftBanner');
   if (draftBanner) draftBanner.classList.add('hidden');
   showToast('Draft discarded.', 'success');
@@ -2413,16 +2393,6 @@ function sendOrderNotification(customerName, customerPhone, productName, price) 
 }
 
 
-/* Set spacer height to match fixed header */
-function updateHeaderSpacer() {
-  const header = document.getElementById('stickyHeader');
-  const spacer = document.getElementById('headerSpacer');
-  if (header && spacer) {
-    spacer.style.height = header.offsetHeight + 'px';
-  }
-}
-window.addEventListener('load', updateHeaderSpacer);
-window.addEventListener('resize', updateHeaderSpacer);
 
 loadSupabaseThenInit();
 </script>
