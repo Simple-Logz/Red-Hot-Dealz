@@ -1174,10 +1174,14 @@
             <div class="admin-step-title">Choose a Category</div>
           </div>
           <div class="admin-step-body">
-            <select class="admin-select" id="uploadCategory">
+            <select class="admin-select" id="uploadCategory" onchange="handleCategoryChange(this.value)">
               <option value="" disabled selected>Select category…</option>
               <option value="all" disabled>──────────</option>
             </select>
+            <div id="customCategoryWrap" style="display:none;margin-top:12px">
+              <input class="admin-input" type="text" id="customCategoryInput" placeholder="Type your category e.g. Auto Parts, Garden, Baby Clothes…" />
+              <div class="admin-hint" style="margin-top:4px">This creates a new category visible to customers in the store filter.</div>
+            </div>
           </div>
         </div>
 
@@ -2037,12 +2041,13 @@ async function publishProduct() {
 
 function handleCategoryChange(val) {
   const wrap = document.getElementById('customCategoryWrap');
+  const input = document.getElementById('customCategoryInput');
   if (val === 'other') {
-    wrap.classList.remove('hidden');
-    document.getElementById('customCategoryInput').focus();
+    wrap.style.display = 'block';
+    input.focus();
   } else {
-    wrap.classList.add('hidden');
-    document.getElementById('customCategoryInput').value = '';
+    wrap.style.display = 'none';
+    input.value = '';
   }
 }
 
@@ -2140,19 +2145,38 @@ async function loadAdminProducts() {
         ? `<img src="${p.media_urls[0]}" style="width:100%;height:100%;object-fit:cover;border-radius:8px" alt="" />`
         : '<div style="width:100%;height:100%;background:#f0f0f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px">📦</div>';
       const hotBadge  = p.hot_deal ? `<span class="admin-hot-badge">✦ Hot</span>` : '';
-      const soldBadge = p.sold ? `<span class="admin-sold-badge">Sold</span>` : '';
       const views = p.views || 0;
-      return `<div class="admin-product-row" id="row-${p.id}" style="${p.sold ? 'opacity:0.5' : ''}">
+
+      // Days listed
+      const created = p.created_at ? new Date(p.created_at) : new Date();
+      const daysListed = Math.floor((new Date() - created) / (1000 * 60 * 60 * 24));
+      const daysLabel = daysListed === 0 ? 'Listed today' : daysListed === 1 ? '1 day listed' : `${daysListed} days listed`;
+
+      // Status
+      let status, statusColor, statusBg;
+      if (p.sold) {
+        status = '● Sold'; statusColor = '#6b7280'; statusBg = '#f3f4f6';
+      } else if (views >= 10 && !p.sold) {
+        status = '🔥 High interest — consider price'; statusColor = '#d97706'; statusBg = '#fffbeb';
+      } else if (daysListed > 14 && views < 3) {
+        status = '⚠ Low visibility — check photos/price'; statusColor = '#dc2626'; statusBg = '#fef2f2';
+      } else {
+        status = '● Active'; statusColor = '#16a34a'; statusBg = '#f0fdf4';
+      }
+
+      return `<div class="admin-product-row" id="row-${p.id}">
         <div class="admin-product-thumb">${thumb}</div>
         <div class="admin-product-info">
-          <div class="admin-product-name">${p.name} ${hotBadge} ${soldBadge}</div>
+          <div class="admin-product-name">${p.name} ${hotBadge}</div>
           <div class="admin-product-meta">
             <span class="admin-product-cat">${cat.label}</span>
             &nbsp;$${Number(p.price).toFixed(2)}
             ${p.retail_price ? `<span style="color:#aaa;text-decoration:line-through;margin-left:6px;font-size:11px">$${Number(p.retail_price).toFixed(2)}</span>` : ''}
           </div>
-          <div style="font-size:11px;color:#888;margin-top:4px">
-            👁 ${views} view${views !== 1 ? 's' : ''}
+          <div style="display:flex;gap:12px;align-items:center;margin-top:5px;flex-wrap:wrap">
+            <span style="font-size:11px;color:#888">👁 ${views} view${views !== 1 ? 's' : ''}</span>
+            <span style="font-size:11px;color:#888">📅 ${daysLabel}</span>
+            <span style="font-size:11px;font-weight:600;color:${statusColor};background:${statusBg};padding:2px 8px;border-radius:4px">${status}</span>
           </div>
         </div>
         <button class="btn-delete" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g, "\\'")}')" title="Delete">✕</button>
