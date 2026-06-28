@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0" />
 <title>RedHotDealz — Brand New Products Up to 80% Off | Overstock Deals</title>
   <!-- ═══ SEO META TAGS ═══════════════════════════════════ -->
-  <meta name="description" content="RedHotDealz — Brand new products at up to 80% off retail prices. Genuine overstock items including phones, laptops, TVs, appliances, fashion and more. Free USPS shipping on qualifying orders.">
+  <meta name="description" content="RedHotDealz — Brand new overstock products at up to 70% off retail. Phones, TVs, laptops, appliances, fashion and more. Genuine products. USPS shipping. Shop now at redhotdealz.com">
   <meta name="keywords" content="discount store, overstock deals, brand new products cheap, cheap electronics, discount phones, discount laptops, liquidation deals, cheap TVs, discount appliances, RedHotDealz">
   <meta name="author" content="RedHotDealz">
   <meta name="robots" content="index, follow">
@@ -18,7 +18,10 @@
   <meta property="og:url" content="https://redhotdealz.com">
   <meta property="og:title" content="RedHotDealz — Brand New Products. Up to 80% Off.">
   <meta property="og:description" content="Genuine brand new products from overstock warehouses. Phones, laptops, TVs, appliances, fashion and more — all at massive discounts. Shop now at RedHotDealz.com">
-  <meta property="og:image" content="https://redhotdealz.com/og-image.jpg">
+  <meta property="og:image" content="https://redhotdealz.com/og-image.svg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/svg+xml">
   <meta property="og:site_name" content="RedHotDealz">
   <meta property="og:locale" content="en_US">
 
@@ -27,7 +30,7 @@
   <meta name="twitter:url" content="https://redhotdealz.com">
   <meta name="twitter:title" content="RedHotDealz — Brand New Products. Up to 80% Off.">
   <meta name="twitter:description" content="Genuine brand new products from overstock warehouses at massive discounts. Shop phones, laptops, TVs, appliances and more.">
-  <meta name="twitter:image" content="https://redhotdealz.com/og-image.jpg">
+  <meta name="twitter:image" content="https://redhotdealz.com/og-image.svg">
 
   <!-- ═══ STRUCTURED DATA (Google Rich Results) ════════════ -->
   <script type="application/ld+json">
@@ -1596,7 +1599,7 @@ function buildCategoryBar(products) {
   if (!list) return;
   const counts = {};
   products.filter(p => !p.sold).forEach(p => {
-    counts[p.category] = (counts[p.category] || 0) + 1;
+    if (p.category) counts[p.category] = (counts[p.category] || 0) + 1;
   });
 
   const allItem = `<button class="menu-cat-item ${activeCategory === 'all' ? 'active' : ''}" onclick="filterCategory('all');closeMenu()">
@@ -1604,14 +1607,27 @@ function buildCategoryBar(products) {
     <span class="menu-cat-count">${products.filter(p=>!p.sold).length}</span>
   </button>`;
 
-  const catItems = CATEGORIES
+  // Standard categories that have products
+  const standardIds = CATEGORIES.map(c => c.id);
+  const standardItems = CATEGORIES
     .filter(c => counts[c.id] > 0)
     .map(c => `<button class="menu-cat-item ${activeCategory === c.id ? 'active' : ''}" onclick="filterCategory('${c.id}');closeMenu()">
       ${c.label}
       <span class="menu-cat-count">${counts[c.id]}</span>
     </button>`).join('');
 
-  list.innerHTML = allItem + catItems;
+  // Custom categories — anything not in the standard list
+  const customItems = Object.keys(counts)
+    .filter(id => !standardIds.includes(id) && id !== 'other' && id !== 'all')
+    .map(id => {
+      const label = id.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      return `<button class="menu-cat-item ${activeCategory === id ? 'active' : ''}" onclick="filterCategory('${id}');closeMenu()">
+        ${label}
+        <span class="menu-cat-count">${counts[id]}</span>
+      </button>`;
+    }).join('');
+
+  list.innerHTML = allItem + standardItems + customItems;
 }
 
 const HOME_LIMIT = 8; // max products shown on home page
@@ -1686,7 +1702,11 @@ function showHotDealsView() {
    PRODUCT GRID
 ═══════════════════════════════════════════════════ */
 function getCatMeta(catId) {
-  return CATEGORIES.find(c => c.id === catId) || { label: catId, icon: '' };
+  const standard = CATEGORIES.find(c => c.id === catId);
+  if (standard) return standard;
+  // Custom category — format nicely
+  const label = (catId || 'Other').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  return { label, icon: '' };
 }
 
 function renderGrid(products) {
@@ -1989,9 +2009,10 @@ async function publishProduct() {
   // Collect all field values
   let category = document.getElementById('uploadCategory').value;
   if (category === 'other') {
-    const custom = document.getElementById('customCategoryInput').value.trim().toLowerCase().replace(/\s+/g, '_');
+    const custom = document.getElementById('customCategoryInput').value.trim();
     if (!custom) { alert('Please enter a custom category name.'); return; }
-    category = custom;
+    // Save as lowercase with underscores e.g. "Auto Parts" → "auto_parts"
+    category = custom.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
   }
   const name      = document.getElementById('uploadName').value.trim();
   const brand     = document.getElementById('uploadBrand').value.trim();
@@ -2201,6 +2222,7 @@ async function loadAdminProducts() {
     });
     if (!res.ok) throw new Error(await res.text());
     const products = await res.json();
+    window.adminProducts = products; // Store for edit function
 
     if (!products.length) {
       list.innerHTML = '<div style="color:#444;text-align:center;padding:60px">No products yet. Add your first one!</div>';
@@ -2624,11 +2646,24 @@ async function saveProductOrder() {
 /* ════════════════════════════════════════════════
    EDIT PRODUCT
 ═══════════════════════════════════════════════════ */
-function editProduct(id) {
-  const p = window.adminProducts ? window.adminProducts.find(x => x.id === id) : null;
-  if (!p) { alert('Product not found. Please refresh.'); return; }
+async function editProduct(id) {
+  // Try window.adminProducts first, then fetch directly
+  let p = window.adminProducts ? window.adminProducts.find(x => x.id === id) : null;
 
-  document.getElementById('editProductId').value = id;
+  if (!p) {
+    // Fetch directly from Supabase
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      p = data[0];
+    }
+  }
+
+  if (!p) { alert('Product not found. Please refresh and try again.'); return; }
+
+  document.getElementById('editProductId').value = p.id;
   document.getElementById('editName').value = p.name || '';
   document.getElementById('editBrand').value = p.brand || '';
   document.getElementById('editPrice').value = p.price || '';
@@ -2639,7 +2674,14 @@ function editProduct(id) {
 
   // Populate category select
   const catSel = document.getElementById('editCategory');
-  catSel.innerHTML = CATEGORIES.map(c => `<option value="${c.id}" ${c.id === p.category ? 'selected' : ''}>${c.label}</option>`).join('');
+  catSel.innerHTML = CATEGORIES.map(c =>
+    `<option value="${c.id}" ${c.id === p.category ? 'selected' : ''}>${c.label}</option>`
+  ).join('');
+  // Add custom category if not in standard list
+  const standardIds = CATEGORIES.map(c => c.id);
+  if (p.category && !standardIds.includes(p.category)) {
+    catSel.innerHTML += `<option value="${p.category}" selected>${p.category.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}</option>`;
+  }
 
   document.getElementById('editModal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
