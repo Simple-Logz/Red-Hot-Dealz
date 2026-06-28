@@ -2020,31 +2020,35 @@ async function loadProducts() {
   if (grid) grid.innerHTML = '<div style="text-align:center;padding:60px;color:#aaa;font-size:14px">Loading…</div>';
 
   try {
+    console.log('RHD: Starting fetch...');
     const res = await fetch(SUPABASE_URL + '/rest/v1/products?order=sort_order.asc,created_at.desc', {
       headers: {
         'apikey': SUPABASE_ANON,
         'Authorization': 'Bearer ' + SUPABASE_ANON
       }
     });
+    console.log('RHD: Fetch done, status:', res.status);
     if (res.ok) {
       const data = await res.json();
       allProducts = Array.isArray(data) ? data : [];
+      console.log('RHD: Products loaded:', allProducts.length);
     } else {
-      console.error('Supabase error:', res.status, await res.text());
       allProducts = [];
+      console.error('RHD: Supabase error:', res.status);
     }
   } catch(e) {
-    console.error('Fetch error:', e);
     allProducts = [];
+    console.error('RHD: Fetch error:', e);
   }
 
-  // Always show products — even if empty
+  console.log('RHD: Calling showHomeView...');
   if (window.pendingHash) {
     routeFromHash(window.pendingHash);
     window.pendingHash = null;
   } else {
     showHomeView();
   }
+  console.log('RHD: Done.');
 
   if (window.adminPending) { window.adminPending = false; openAdmin(); }
   if (window.paymentSuccess) {
@@ -3654,3 +3658,6 @@ function handleURLOnLoad() {
 
 // INIT
 loadSupabaseThenInit();
+</script>
+</body>
+</html>
