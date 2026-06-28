@@ -1225,6 +1225,27 @@
               <div class="admin-hint">How many units do you have to sell?</div>
             </div>
             <div class="admin-field">
+              <label class="admin-label">Color <span style="color:#aaa;font-weight:400;font-size:11px;text-transform:none">(optional)</span></label>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <input class="admin-input" type="text" id="uploadColor" placeholder="e.g. Black, Red, Space Gray, Multi-color…" style="flex:1;min-width:180px" />
+                <div style="display:flex;gap:6px;flex-wrap:wrap" id="colorSwatches">
+                  <button type="button" onclick="setColor('#000000','Black')" style="width:28px;height:28px;border-radius:50%;background:#000;border:2px solid #e5e7eb;cursor:pointer" title="Black"></button>
+                  <button type="button" onclick="setColor('#ffffff','White')" style="width:28px;height:28px;border-radius:50%;background:#fff;border:2px solid #e5e7eb;cursor:pointer" title="White"></button>
+                  <button type="button" onclick="setColor('#dc2626','Red')" style="width:28px;height:28px;border-radius:50%;background:#dc2626;border:2px solid #e5e7eb;cursor:pointer" title="Red"></button>
+                  <button type="button" onclick="setColor('#2563eb','Blue')" style="width:28px;height:28px;border-radius:50%;background:#2563eb;border:2px solid #e5e7eb;cursor:pointer" title="Blue"></button>
+                  <button type="button" onclick="setColor('#16a34a','Green')" style="width:28px;height:28px;border-radius:50%;background:#16a34a;border:2px solid #e5e7eb;cursor:pointer" title="Green"></button>
+                  <button type="button" onclick="setColor('#ca8a04','Yellow')" style="width:28px;height:28px;border-radius:50%;background:#ca8a04;border:2px solid #e5e7eb;cursor:pointer" title="Yellow"></button>
+                  <button type="button" onclick="setColor('#9333ea','Purple')" style="width:28px;height:28px;border-radius:50%;background:#9333ea;border:2px solid #e5e7eb;cursor:pointer" title="Purple"></button>
+                  <button type="button" onclick="setColor('#f97316','Orange')" style="width:28px;height:28px;border-radius:50%;background:#f97316;border:2px solid #e5e7eb;cursor:pointer" title="Orange"></button>
+                  <button type="button" onclick="setColor('#ec4899','Pink')" style="width:28px;height:28px;border-radius:50%;background:#ec4899;border:2px solid #e5e7eb;cursor:pointer" title="Pink"></button>
+                  <button type="button" onclick="setColor('#6b7280','Gray')" style="width:28px;height:28px;border-radius:50%;background:#6b7280;border:2px solid #e5e7eb;cursor:pointer" title="Gray"></button>
+                  <button type="button" onclick="setColor('#92400e','Brown')" style="width:28px;height:28px;border-radius:50%;background:#92400e;border:2px solid #e5e7eb;cursor:pointer" title="Brown"></button>
+                  <button type="button" onclick="setColor('','Multi-color')" style="width:28px;height:28px;border-radius:50%;background:conic-gradient(red,yellow,green,blue,purple,red);border:2px solid #e5e7eb;cursor:pointer" title="Multi-color"></button>
+                </div>
+              </div>
+              <div class="admin-hint">Click a swatch or type any color name. Leave blank if not applicable.</div>
+            </div>
+            <div class="admin-field">
               <label class="admin-label">Description</label>
               <textarea class="admin-input admin-textarea" id="uploadDesc" placeholder="Describe the product — what it is, condition, what's included…"></textarea>
             </div>
@@ -1453,6 +1474,33 @@
       <button onclick="saveEditProduct()" style="width:100%;padding:15px;background:#cc0000;color:white;border:none;border-radius:12px;font-family:var(--font-head);font-size:16px;font-weight:700;cursor:pointer">
         Save Changes
       </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- REVIEWS PANEL -->
+<div class="reviews-overlay hidden" id="reviewsOverlay" onclick="handleReviewsOverlayClick(event)">
+  <div class="reviews-panel" id="reviewsPanel">
+    <div class="reviews-header">
+      <div class="reviews-title" id="reviewsProductName">Reviews</div>
+      <button class="reviews-close" onclick="closeReviews()">✕</button>
+    </div>
+    <div class="reviews-body" id="reviewsBody">
+      <div class="review-empty">Loading reviews…</div>
+    </div>
+    <div class="reviews-footer">
+      <div class="reviews-form-title">Leave a Review</div>
+      <div class="star-picker" id="starPicker">
+        <span onclick="setStarRating(1)" data-val="1">★</span>
+        <span onclick="setStarRating(2)" data-val="2">★</span>
+        <span onclick="setStarRating(3)" data-val="3">★</span>
+        <span onclick="setStarRating(4)" data-val="4">★</span>
+        <span onclick="setStarRating(5)" data-val="5">★</span>
+      </div>
+      <input class="review-name-input" id="reviewName" type="text" placeholder="Your name (e.g. Sarah M.)" maxlength="50" />
+      <textarea class="review-textarea" id="reviewText" placeholder="Share your experience with this product…" maxlength="500"></textarea>
+      <button class="btn-submit-review" id="submitReviewBtn" onclick="submitReview()">Post Review</button>
     </div>
   </div>
 </div>
@@ -1738,13 +1786,14 @@ function renderGrid(products) {
         ${soldStamp}
       </div>
       <div class="card-body">
-        <div class="card-cat-label">${cat.label}${p.condition ? ` · ${p.condition}` : ""}</div>
+        <div class="card-cat-label">${cat.label}${p.condition ? ` · ${p.condition}` : ""}${p.color ? ` · <span style="display:inline-flex;align-items:center;gap:3px">${p.color}</span>` : ""}</div>
         <div class="card-name">${p.name}</div>
         <div class="card-prices">
           <div class="card-price">$${Number(p.price).toFixed(2)}</div>
           ${p.retail_price ? `<div class="card-retail">$${Number(p.retail_price).toFixed(2)}</div>` : ''}
         </div>
         ${p.sold ? `<div style="font-size:12px;color:#999;margin-top:8px;font-weight:600">This item has been sold</div>` : `<button class="card-cta" onclick="event.stopPropagation();openModal(${p.id})">View Deal</button><button class="btn-add-cart" onclick="event.stopPropagation();addToCart(${p.id})">Add to Cart</button>`}
+        <button class="btn-reviews" onclick="event.stopPropagation();openReviews(${p.id},'${p.name.replace(/'/g,'\\'')}')">${p.avg_rating ? '★'.repeat(Math.round(p.avg_rating)) + '☆'.repeat(5-Math.round(p.avg_rating)) + ' ' + p.avg_rating.toFixed(1) : '☆ Write a Review'}</button>
       </div>
     </div>`;
   }).join('');
@@ -1811,7 +1860,7 @@ function openModal(id) {
   document.getElementById('modalContent').innerHTML = `
     <div class="modal-media-wrap">${mediaHtml}</div>
     <div class="modal-body">
-      <div class="modal-cat-tag">${cat.label}</div>
+      <div class="modal-cat-tag">${cat.label}${p.color ? `&nbsp;·&nbsp;<span style="display:inline-flex;align-items:center;gap:4px;font-weight:600">${p.color}</span>` : ""}</div>
       <div class="modal-name">${p.name}</div>
       <div class="modal-prices">
         <div class="modal-price">$${Number(p.price).toFixed(2)}</div>
@@ -2020,6 +2069,7 @@ async function publishProduct() {
   const retail    = parseFloat(document.getElementById('uploadRetail').value) || null;
   const desc      = document.getElementById('uploadDesc').value.trim();
   const isHot     = document.getElementById('uploadHotDeal').checked;
+  const color     = document.getElementById('uploadColor') ? document.getElementById('uploadColor').value.trim() : '';
 
   // Validate required fields
   if (!category) { alert('Please choose a category.'); return; }
@@ -2107,6 +2157,7 @@ async function publishProduct() {
     document.getElementById('uploadRetail').value = '';
     document.getElementById('uploadDesc').value = '';
     document.getElementById('uploadHotDeal').checked = false;
+  if (document.getElementById('uploadColor')) document.getElementById('uploadColor').value = '';
     document.getElementById('mediaPreviewGrid').innerHTML = '';
     mediaFiles = [];
 
@@ -2126,6 +2177,10 @@ async function publishProduct() {
 /* ════════════════════════════════════════════════
    DRAFT SAVE / RESTORE
 ═══════════════════════════════════════════════════ */
+
+function setColor(hex, name) {
+  document.getElementById('uploadColor').value = name;
+}
 
 function handleCategoryChange(val) {
   const wrap = document.getElementById('customCategoryWrap');
@@ -2205,6 +2260,7 @@ function resetUploadForm() {
   document.getElementById('uploadRetail').value = '';
   document.getElementById('uploadDesc').value = '';
   document.getElementById('uploadHotDeal').checked = false;
+  if (document.getElementById('uploadColor')) document.getElementById('uploadColor').value = '';
   document.getElementById('mediaPreviewGrid').innerHTML = '';
   mediaFiles = [];
 }
@@ -2647,22 +2703,34 @@ async function saveProductOrder() {
    EDIT PRODUCT
 ═══════════════════════════════════════════════════ */
 async function editProduct(id) {
-  // Try window.adminProducts first, then fetch directly
-  let p = window.adminProducts ? window.adminProducts.find(x => x.id === id) : null;
+  // Convert to number to match Supabase integer IDs
+  id = parseInt(id);
 
+  // Try window.adminProducts first
+  let p = window.adminProducts ? window.adminProducts.find(x => parseInt(x.id) === id) : null;
+
+  // If not found, fetch directly from Supabase
   if (!p) {
-    // Fetch directly from Supabase
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
-      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
-    });
-    if (res.ok) {
-      const data = await res.json();
-      p = data[0];
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
+        headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        p = data[0];
+      }
+    } catch(e) {
+      alert('Error fetching product: ' + e.message);
+      return;
     }
   }
 
-  if (!p) { alert('Product not found. Please refresh and try again.'); return; }
+  if (!p) {
+    alert('Product not found (ID: ' + id + '). Please refresh the My Products tab and try again.');
+    return;
+  }
 
+  // Fill in all fields
   document.getElementById('editProductId').value = p.id;
   document.getElementById('editName').value = p.name || '';
   document.getElementById('editBrand').value = p.brand || '';
@@ -2671,6 +2739,7 @@ async function editProduct(id) {
   document.getElementById('editDesc').value = p.description || '';
   document.getElementById('editHotDeal').checked = p.hot_deal || false;
   document.getElementById('editCondition').value = p.condition || 'Brand New';
+  if (document.getElementById('editColor')) document.getElementById('editColor').value = p.color || '';
 
   // Populate category select
   const catSel = document.getElementById('editCategory');
@@ -2683,6 +2752,7 @@ async function editProduct(id) {
     catSel.innerHTML += `<option value="${p.category}" selected>${p.category.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}</option>`;
   }
 
+  // Show modal
   document.getElementById('editModal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
@@ -2702,6 +2772,7 @@ async function saveEditProduct() {
   const desc = document.getElementById('editDesc').value.trim();
   const isHot = document.getElementById('editHotDeal').checked;
   const condition = document.getElementById('editCondition').value;
+  const color = document.getElementById('editColor') ? document.getElementById('editColor').value.trim() : '';
 
   if (!name) { alert('Please enter a product name.'); return; }
   if (!price || isNaN(price)) { alert('Please enter a valid price.'); return; }
@@ -2713,7 +2784,7 @@ async function saveEditProduct() {
       'apikey': SUPABASE_ANON,
       'Authorization': `Bearer ${SUPABASE_ANON}`
     },
-    body: JSON.stringify({ name, brand, category, price, retail_price: retail, description: desc, hot_deal: isHot, condition })
+    body: JSON.stringify({ name, brand, category, price, retail_price: retail, description: desc, hot_deal: isHot, condition, color: color || null })
   });
 
   if (!res.ok) {
@@ -2726,6 +2797,155 @@ async function saveEditProduct() {
   showToast('Product updated successfully!', 'success');
   await loadAdminProducts();
   await loadProducts();
+}
+
+
+/* ════════════════════════════════════════════════
+   REVIEWS & RATINGS
+═══════════════════════════════════════════════════ */
+let currentReviewProductId = null;
+let selectedStarRating = 0;
+
+function openReviews(productId, productName) {
+  currentReviewProductId = productId;
+  selectedStarRating = 0;
+  document.getElementById('reviewsProductName').textContent = productName;
+  document.getElementById('reviewName').value = '';
+  document.getElementById('reviewText').value = '';
+  document.getElementById('reviewsBody').innerHTML = '<div class="review-empty">Loading reviews…</div>';
+  setStarRating(0);
+
+  const overlay = document.getElementById('reviewsOverlay');
+  overlay.classList.remove('hidden');
+  setTimeout(() => overlay.classList.add('open'), 10);
+  document.body.style.overflow = 'hidden';
+
+  loadReviews(productId);
+}
+
+function closeReviews() {
+  const overlay = document.getElementById('reviewsOverlay');
+  overlay.classList.remove('open');
+  setTimeout(() => { overlay.classList.add('hidden'); document.body.style.overflow = ''; }, 300);
+}
+
+function handleReviewsOverlayClick(e) {
+  if (e.target === document.getElementById('reviewsOverlay')) closeReviews();
+}
+
+function setStarRating(val) {
+  selectedStarRating = val;
+  document.querySelectorAll('#starPicker span').forEach((el, i) => {
+    el.classList.toggle('active', i < val);
+  });
+}
+
+async function loadReviews(productId) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?product_id=eq.${productId}&order=created_at.desc`, {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+    const reviews = await res.json();
+
+    const body = document.getElementById('reviewsBody');
+
+    if (!reviews.length) {
+      body.innerHTML = '<div class="review-empty">No reviews yet. Be the first to leave one!</div>';
+      return;
+    }
+
+    // Calculate average
+    const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+    const fullStars = '★'.repeat(Math.round(avg)) + '☆'.repeat(5 - Math.round(avg));
+
+    body.innerHTML = `
+      <div class="reviews-summary">
+        <div class="reviews-avg-score">${avg.toFixed(1)}</div>
+        <div class="reviews-avg-right">
+          <div class="reviews-stars-display">${fullStars}</div>
+          <div class="reviews-count">${reviews.length} review${reviews.length !== 1 ? 's' : ''}</div>
+        </div>
+      </div>
+      ${reviews.map(r => `
+        <div class="review-item">
+          <div class="review-top">
+            <span class="review-author">${r.author_name || 'Anonymous'}</span>
+            <span class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
+          </div>
+          <div class="review-date">${new Date(r.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
+          ${r.review_text ? `<div class="review-text">${r.review_text}</div>` : ''}
+        </div>
+      `).join('')}
+    `;
+  } catch(e) {
+    document.getElementById('reviewsBody').innerHTML = `<div class="review-empty">Could not load reviews.</div>`;
+  }
+}
+
+async function submitReview() {
+  if (!selectedStarRating) { alert('Please select a star rating.'); return; }
+  const name = document.getElementById('reviewName').value.trim();
+  const text = document.getElementById('reviewText').value.trim();
+  if (!name) { alert('Please enter your name.'); return; }
+
+  const btn = document.getElementById('submitReviewBtn');
+  btn.disabled = true; btn.textContent = 'Posting…';
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        product_id: currentReviewProductId,
+        author_name: name,
+        rating: selectedStarRating,
+        review_text: text
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      alert('Could not post review: ' + err);
+      btn.disabled = false; btn.textContent = 'Post Review';
+      return;
+    }
+
+    // Update avg_rating on product
+    const reviewsRes = await fetch(`${SUPABASE_URL}/rest/v1/reviews?product_id=eq.${currentReviewProductId}`, {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+    });
+    const allReviews = await reviewsRes.json();
+    const avg = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
+
+    await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${currentReviewProductId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`
+      },
+      body: JSON.stringify({ avg_rating: parseFloat(avg.toFixed(1)), review_count: allReviews.length })
+    });
+
+    document.getElementById('reviewName').value = '';
+    document.getElementById('reviewText').value = '';
+    setStarRating(0);
+    btn.disabled = false; btn.textContent = 'Post Review';
+    showToast('Review posted. Thank you!', 'success');
+    loadReviews(currentReviewProductId);
+    await loadProducts();
+
+  } catch(e) {
+    alert('Error: ' + e.message);
+    btn.disabled = false; btn.textContent = 'Post Review';
+  }
 }
 
 function showAbout() {
