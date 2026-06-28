@@ -1,54 +1,47 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
 
   <!-- Background -->
-  <rect width="1200" height="630" fill="#b91c1c"/>
+  <rect width="1200" height="630" fill="#cc0000"/>
 
-  <!-- Top accent stripe -->
+  <!-- Dark right panel -->
+  <rect x="520" y="0" width="680" height="630" fill="#111111"/>
+
+  <!-- Gold top stripe -->
   <rect x="0" y="0" width="1200" height="8" fill="#ffcc00"/>
-  <!-- Bottom accent stripe -->
+  <!-- Gold bottom stripe -->
   <rect x="0" y="622" width="1200" height="8" fill="#ffcc00"/>
+  <!-- Gold divider -->
+  <rect x="516" y="0" width="8" height="630" fill="#ffcc00"/>
 
-  <!-- Main logo text - all one piece, no flame tricks -->
-  <text x="600" y="220" 
-    font-family="Arial Black, Arial, sans-serif" 
-    font-size="130" 
-    font-weight="900" 
-    fill="white" 
-    text-anchor="middle"
-    letter-spacing="-2">RedHotDealz</text>
+  <!-- LEFT SIDE — Flame centered -->
+  <!-- Outer flame -->
+  <path d="M260,520 C190,496 148,432 156,356 C162,300 190,308 190,308 C178,368 212,392 212,392 C194,304 236,216 260,144 C260,144 252,272 296,296 C296,296 264,200 304,152 C304,152 348,236 336,332 C336,332 356,288 352,244 C352,244 388,308 372,392 C358,460 322,504 260,520 Z" fill="white" opacity="0.95"/>
+  <!-- Orange mid flame -->
+  <path d="M260,504 C196,482 158,420 165,348 C171,294 196,302 196,302 C184,360 215,382 215,382 C198,298 238,216 260,148 C260,148 253,268 293,291 C293,291 263,198 300,154 C300,154 341,234 330,326 C330,326 348,284 344,244 C344,244 377,305 362,385 C349,450 316,491 260,504 Z" fill="#ff8800"/>
+  <!-- Yellow inner flame -->
+  <path d="M260,484 C202,463 168,404 174,336 C180,285 202,292 202,292 C192,346 218,366 218,366 C203,286 239,210 260,152 C260,152 253,264 289,285 C289,285 261,196 295,156 C295,156 333,232 323,318 C323,318 339,278 335,242 C335,242 365,300 351,376 C339,436 309,470 260,484 Z" fill="#ffcc00"/>
+  <!-- Bright tip -->
+  <path d="M276,220 C273,176 281,136 285,108 C285,108 282,164 298,176 C298,176 284,144 300,120 C300,120 318,156 313,196 C313,196 320,170 318,148 C318,148 332,176 327,212 C322,236 308,244 288,236 C280,220 277,228 276,220 Z" fill="white" opacity="0.85"/>
+  <!-- Base glow -->
+  <ellipse cx="260" cy="512" rx="70" ry="16" fill="rgba(255,180,0,0.2)"/>
 
-  <!-- .com subscript -->
-  <text x="600" y="290" 
-    font-family="Arial Black, Arial, sans-serif" 
-    font-size="48" 
-    font-weight="900" 
-    fill="#ffcc00" 
-    text-anchor="middle"
-    letter-spacing="2">.com</text>
+  <!-- RIGHT SIDE — Brand text -->
+  <text x="560" y="200" font-family="Arial Black, Arial, sans-serif" font-size="96" font-weight="900" fill="white" letter-spacing="-2">RedHot</text>
+  <text x="560" y="306" font-family="Arial Black, Arial, sans-serif" font-size="96" font-weight="900" fill="#ffcc00" letter-spacing="-2">Dealz</text>
+  <text x="562" y="348" font-family="Arial Black, Arial, sans-serif" font-size="22" font-weight="400" fill="rgba(255,255,255,0.5)" letter-spacing="3">.com</text>
 
   <!-- Divider -->
-  <rect x="200" y="318" width="800" height="4" fill="rgba(255,255,255,0.3)" rx="2"/>
+  <rect x="560" y="370" width="580" height="2" fill="rgba(255,255,255,0.15)" rx="1"/>
 
   <!-- Tagline -->
-  <text x="600" y="385" 
-    font-family="Arial, sans-serif" 
-    font-size="36" 
-    font-weight="700"
-    fill="rgba(255,255,255,0.92)" 
-    text-anchor="middle">Brand New Products — Up to 70% Off Retail</text>
+  <text x="560" y="410" font-family="Arial, sans-serif" font-size="24" fill="rgba(255,255,255,0.8)">Brand New Products — Up to 70% Off Retail</text>
 
-  <!-- Trust badges -->
-  <text x="200" y="460" font-family="Arial,sans-serif" font-size="24" fill="rgba(255,255,255,0.8)">✓ 100% Authentic</text>
-  <text x="500" y="460" font-family="Arial,sans-serif" font-size="24" fill="rgba(255,255,255,0.8)">✓ Secure Checkout</text>
-  <text x="800" y="460" font-family="Arial,sans-serif" font-size="24" fill="rgba(255,255,255,0.8)">✓ USPS Shipping</text>
+  <!-- Trust items -->
+  <text x="560" y="460" font-family="Arial, sans-serif" font-size="18" fill="rgba(255,255,255,0.55)">✓  100% Authentic    ✓  Secure Checkout    ✓  USPS Shipping</text>
 
-  <!-- Bottom dark bar -->
-  <rect x="0" y="510" width="1200" height="112" fill="rgba(0,0,0,0.4)"/>
-  <text x="600" y="578" 
-    font-family="Arial Black, Arial, sans-serif" 
-    font-size="36" 
-    font-weight="900"
-    fill="white" 
-    text-anchor="middle">www.redhotdealz.com</text>
+  <!-- Bottom URL -->
+  <rect x="520" y="530" width="680" height="92" fill="rgba(255,204,0,0.08)"/>
+  <rect x="520" y="530" width="680" height="2" fill="rgba(255,204,0,0.3)"/>
+  <text x="860" y="588" font-family="Arial Black, Arial, sans-serif" font-size="28" font-weight="900" fill="rgba(255,255,255,0.6)" text-anchor="middle" letter-spacing="1">www.redhotdealz.com</text>
 
 </svg>
