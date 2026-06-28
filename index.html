@@ -1794,7 +1794,7 @@ function filterCategory(catId) {
   activeCategory = catId;
   isHomeView = false;
   currentPage = 0;
-  setURL(catId === 'all' ? {} : {category: catId});
+  if (catId === "all") { setURL({}); } else { setURL({category: catId}); }
   const cat = CATEGORIES.find(c => c.id === catId);
   const pool = allProducts.filter(p => !p.sold);
   const filtered = catId === 'all' ? pool : pool.filter(p => p.category === catId);
@@ -1813,7 +1813,7 @@ function showHomeView(page) {
   activeCategory = 'all';
   isHomeView = true;
   if (page !== undefined) currentPage = page;
-  setURL(currentPage > 0 ? {page: currentPage} : {});
+  setURL(currentPage > 0 ? {page: currentPage} : {}); document.title = "RedHotDealz — Brand New. Discounted Prices.";
 
   const pool = allProducts.filter(p => !p.sold);
   const totalPages = Math.ceil(pool.length / HOME_LIMIT);
@@ -1934,11 +1934,12 @@ async function loadProducts() {
   }
 
   // Handle pending URL params
-  if (window.pendingProductId) {
-    const pid = window.pendingProductId;
-    window.pendingProductId = null;
+  if (window.pendingProductSlug) {
+    const slug = window.pendingProductSlug;
+    window.pendingProductSlug = null;
+    const found = allProducts.find(x => toSlug(x.name) === slug);
     showHomeView();
-    setTimeout(() => openModal(pid), 300);
+    if (found) setTimeout(() => openModal(found.id), 300);
   } else if (window.pendingCategory) {
     const cat = window.pendingCategory;
     window.pendingCategory = null;
@@ -1961,7 +1962,7 @@ async function loadProducts() {
 function openModal(id) {
   const p = allProducts.find(x => x.id === id);
   if (!p) return;
-  setURL({product: id});
+  setURL({product: toSlug(p.name)});
 
   // Track view via REST API
   fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
@@ -2137,8 +2138,7 @@ async function submitInlineReview(productId) {
 function closeModal() {
   document.getElementById('productModal').classList.add('hidden');
   document.body.style.overflow = '';
-  // Restore previous URL
-  window.history.back();
+  setURL({});
 }
 document.getElementById('productModal').addEventListener('click', e => {
   if (e.target === document.getElementById('productModal')) closeModal();
@@ -2890,7 +2890,7 @@ let searchQuery = '';
 
 function handleSearch(q) {
   searchQuery = q.toLowerCase().trim();
-  setURL(searchQuery ? {search: q} : {});
+  if (searchQuery) { setURL({search: q}); } else { setURL({}); }
   document.getElementById('searchClear').style.display = q ? 'block' : 'none';
   if (!searchQuery) { showHomeView(); return; }
   const results = allProducts.filter(p =>
@@ -3304,18 +3304,22 @@ async function submitReview() {
 function showAbout() {
   document.getElementById('aboutModal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+  setURL({view: 'about'});
 }
 function showFAQ() {
   document.getElementById('faqModal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+  setURL({view: 'faq'});
 }
 function showPrivacy() {
   document.getElementById('privacyModal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+  setURL({view: 'privacy'});
 }
 function showTerms() {
   document.getElementById('termsModal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+  setURL({view: 'terms'});
 }
 
 
@@ -3416,19 +3420,7 @@ function sendOrderNotification(customerName, customerPhone, productName, price) 
    URL ROUTING
 ═══════════════════════════════════════════════════ */
 
-function setURL(params) {
-  const url = new URL(window.location.href);
-  // Clear existing route params
-  url.searchParams.delete('product');
-  url.searchParams.delete('category');
-  url.searchParams.delete('search');
-  url.searchParams.delete('page');
-  // Set new ones
-  Object.entries(params).forEach(([k, v]) => {
-    if (v !== null && v !== undefined) url.searchParams.set(k, v);
-  });
-  window.history.pushState({}, '', url.toString());
-}
+
 
 function readURL() {
   const params = new URLSearchParams(window.location.search);
@@ -3442,14 +3434,59 @@ function readURL() {
   };
 }
 
+
+/* ════════════════════════════════════════════════
+   URL SLUG HELPERS
+═══════════════════════════════════════════════════ */
+function toSlug(str) {
+  return (str || '').toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 80);
+}
+
+function setURL(params) {
+  const url = new URL(window.location.href);
+  // Remove all route params
+  ['product','category','page','search','view','payment','admin'].forEach(k => url.searchParams.delete(k));
+  // Set new ones
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== null && v !== undefined && v !== '') url.searchParams.set(k, v);
+  });
+  window.history.pushState({}, '', url.toString());
+  // Update page title
+  updatePageTitle(params);
+}
+
+function updatePageTitle(params) {
+  const base = 'RedHotDealz — Brand New. Discounted Prices.';
+  if (params.product) {
+    const slug = params.product;
+    const p = allProducts.find(x => toSlug(x.name) === slug);
+    document.title = p ? p.name + ' | RedHotDealz' : base;
+  } else if (params.category) {
+    const cat = CATEGORIES.find(c => c.id === params.category);
+    document.title = (cat ? cat.label : params.category) + ' | RedHotDealz';
+  } else if (params.search) {
+    document.title = 'Search: ' + params.search + ' | RedHotDealz';
+  } else if (params.view) {
+    const labels = { hotdeals: 'Hot Deals', about: 'About Us', faq: 'FAQ', privacy: 'Privacy Policy', terms: 'Terms of Service' };
+    document.title = (labels[params.view] || params.view) + ' | RedHotDealz';
+  } else {
+    document.title = base;
+  }
+}
+
 function handleURLOnLoad() {
   const p = readURL();
   if (p.admin === 'open') { window.adminPending = true; return; }
   if (p.payment === 'success') { setTimeout(() => showToast('Payment successful! Thank you for your order.', 'success'), 500); cart = []; updateCartUI(); }
   if (p.payment === 'cancelled') { setTimeout(() => showToast('Payment cancelled.', 'error'), 500); }
   if (p.product) {
-    // Will open product modal after products load
-    window.pendingProductId = parseInt(p.product);
+    // Product slug — find by name slug after products load
+    window.pendingProductSlug = p.product;
   }
   if (p.category) {
     window.pendingCategory = p.category;
@@ -3465,8 +3502,21 @@ function handleURLOnLoad() {
 // Handle browser back/forward buttons
 window.addEventListener('popstate', () => {
   const p = readURL();
-  if (p.product) {
-    openModal(parseInt(p.product));
+  // Close any open modals first
+  ['aboutModal','faqModal','privacyModal','termsModal','editModal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
+  document.body.style.overflow = '';
+
+  if (p.view === 'about') { showAbout(); }
+  else if (p.view === 'faq') { showFAQ(); }
+  else if (p.view === 'privacy') { showPrivacy(); }
+  else if (p.view === 'terms') { showTerms(); }
+  else if (p.view === 'hotdeals') { showHotDeals(); }
+  else if (p.product) {
+    const found = allProducts.find(x => toSlug(x.name) === p.product);
+    if (found) openModal(found.id);
   } else if (p.category) {
     filterCategory(p.category);
   } else if (p.search) {
