@@ -1977,6 +1977,7 @@ async function publishProduct() {
 
     if (!insertRes.ok) {
       const errTxt = await insertRes.text();
+      alert(`PUBLISH ERROR:\n${errTxt}\n\nStatus: ${insertRes.status}`);
       showToast(`Could not save product: ${errTxt}`, 'error');
       btn.disabled = false; btn.textContent = 'Publish to Store';
       return;
