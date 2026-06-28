@@ -167,9 +167,14 @@
   /* Full-screen slide-in menu */
   .nav-menu-backdrop {
     display: none;
-    position: fixed; inset: 0; z-index: 998;
-    background: rgba(0,0,0,0.35);
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    min-height: 100%;
+    z-index: 998;
+    background: rgba(0,0,0,0.4);
     cursor: pointer;
+    touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
   .nav-menu-backdrop.open { display: block; }
@@ -184,7 +189,7 @@
     border-radius: 12px;
     border: 1.5px solid #e5e7eb;
     box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-    z-index: 999;
+    z-index: 1000;
     padding: 6px 0;
     overflow-y: auto;
     max-height: 75vh;
@@ -1825,6 +1830,7 @@ let uploadedMediaUrls = [];
 function toggleMenu() {
   const menu = document.getElementById('navMenu');
   const btn  = document.getElementById('hamburgerBtn');
+  document.getElementById('navBackdrop').style.height = document.documentElement.scrollHeight + 'px';
   const backdrop = document.getElementById('navBackdrop');
   const isOpen = menu.classList.contains('open');
   if (isOpen) { closeMenu(); } else {
@@ -1834,6 +1840,7 @@ function toggleMenu() {
   }
 }
 function closeMenu() {
+  document.getElementById('navBackdrop').style.height = '';
   document.getElementById('navMenu').classList.remove('open');
   document.getElementById('hamburgerBtn').classList.remove('open');
   document.getElementById('navBackdrop').classList.remove('open');
