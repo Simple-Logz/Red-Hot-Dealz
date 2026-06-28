@@ -1802,7 +1802,6 @@ function initSupabase() {
 }
 
 function loadSupabaseThenInit() {
-  // Skip CDN entirely — use REST API directly (proven to work)
   handleURLOnLoad();
   loadProducts();
 }
@@ -2020,63 +2019,29 @@ function renderGrid(products) {
 ═══════════════════════════════════════════════════ */
 async function loadProducts() {
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?order=sort_order.asc,created_at.desc`, {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/products?order=sort_order.asc,created_at.desc', {
       headers: {
         'apikey': SUPABASE_ANON,
-        'Authorization': `Bearer ${SUPABASE_ANON}`
-      },
-      signal: controller.signal
+        'Authorization': 'Bearer ' + SUPABASE_ANON
+      }
     });
-    clearTimeout(timeout);
     if (res.ok) {
-      const data = await res.json();
-      allProducts = data || [];
+      allProducts = await res.json() || [];
     } else {
       allProducts = DEMO_PRODUCTS;
     }
   } catch(e) {
-    console.error('Load error:', e);
     allProducts = DEMO_PRODUCTS;
   }
 
-  // Route based on hash in URL
-  if (window.pendingHash) {
-    routeFromHash(window.pendingHash);
-    window.pendingHash = null;
+  // Show the right view based on hash
+  var hash = window.location.hash.replace('#', '');
+  if (hash) {
+    routeFromHash(hash);
   } else {
     showHomeView();
   }
 
-  // Handle payment callbacks
-  if (window.paymentSuccess) {
-    window.paymentSuccess = false;
-    setTimeout(() => showToast('Payment successful! Thank you for your order.', 'success'), 500);
-    const lastCart = JSON.parse(localStorage.getItem('rhd_last_cart') || '[]');
-    if (lastCart.length > 0) {
-      setTimeout(() => {
-        const item = lastCart[0];
-        if (confirm('Thank you for your order!\n\nWould you like to leave a review for:\n"' + item.name + '"?')) {
-          setTimeout(() => {
-            openModal(item.id);
-            setTimeout(() => {
-              const el = document.getElementById('inlineReviewName');
-              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 600);
-          }, 300);
-        }
-        localStorage.removeItem('rhd_last_cart');
-      }, 2000);
-    }
-    cart = []; updateCartUI();
-  }
-  if (window.paymentCancelled) {
-    window.paymentCancelled = false;
-    setTimeout(() => showToast('Payment cancelled. Your cart is still saved.', 'error'), 500);
-  }
-
-  // Open admin AFTER products are loaded
   if (window.adminPending) { window.adminPending = false; openAdmin(); }
 }
 
@@ -2288,14 +2253,31 @@ async function submitOrder(productId) {
   const soldAt = new Date().toISOString();
 
   try {
-    if (isSupabaseConfigured) {
-      await supabase.from('orders').insert({
+    // Save order via REST API
+    await fetch(SUPABASE_URL + '/rest/v1/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': 'Bearer ' + SUPABASE_ANON,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
         product_id: productId, customer_name: name,
         customer_phone: phone, customer_address: address,
-        notes, product_price: p.price
-      });
-      await supabase.from('products').update({ sold: true, sold_at: soldAt }).eq('id', productId);
-    }
+        notes, product_price: p ? p.price : 0
+      })
+    });
+    // Mark product as sold via REST API
+    await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + productId, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': 'Bearer ' + SUPABASE_ANON
+      },
+      body: JSON.stringify({ sold: true, sold_at: soldAt })
+    });
 
     // Mark sold in local state immediately
     const localProduct = allProducts.find(x => x.id === productId);
