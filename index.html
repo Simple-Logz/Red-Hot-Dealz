@@ -1793,7 +1793,7 @@ function renderGrid(products) {
           ${p.retail_price ? `<div class="card-retail">$${Number(p.retail_price).toFixed(2)}</div>` : ''}
         </div>
         ${p.sold ? `<div style="font-size:12px;color:#999;margin-top:8px;font-weight:600">This item has been sold</div>` : `<button class="card-cta" onclick="event.stopPropagation();openModal(${p.id})">View Deal</button><button class="btn-add-cart" onclick="event.stopPropagation();addToCart(${p.id})">Add to Cart</button>`}
-        <button class="btn-reviews" onclick="event.stopPropagation();openReviews(${p.id},'${p.name.replace(/'/g,'\\'')}')">${p.avg_rating ? '★'.repeat(Math.round(p.avg_rating)) + '☆'.repeat(5-Math.round(p.avg_rating)) + ' ' + p.avg_rating.toFixed(1) : '☆ Write a Review'}</button>
+        <button class="btn-reviews" onclick="event.stopPropagation();openReviews(${p.id}, this.dataset.name)" data-name="${p.name}">${p.review_count > 0 ? p.review_count + ' review' + (p.review_count > 1 ? 's' : '') + ' · ' + Number(p.avg_rating).toFixed(1) + ' ★' : '☆ Write a Review'}</button>
       </div>
     </div>`;
   }).join('');
@@ -2806,7 +2806,8 @@ async function saveEditProduct() {
 let currentReviewProductId = null;
 let selectedStarRating = 0;
 
-function openReviews(productId, productName) {
+function openReviews(productId, nameEl) {
+  const productName = typeof nameEl === "string" ? nameEl : (nameEl && nameEl.dataset ? nameEl.dataset.name : "Product");
   currentReviewProductId = productId;
   selectedStarRating = 0;
   document.getElementById('reviewsProductName').textContent = productName;
