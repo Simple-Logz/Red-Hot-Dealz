@@ -1918,10 +1918,10 @@ async function publishProduct() {
   try {
     let mediaUrls = [];
 
-    // Upload photos if any — use REST API directly
+    // Upload photos — required for publishing
     if (mediaFiles && mediaFiles.length > 0) {
       for (let i = 0; i < mediaFiles.length; i++) {
-        btn.textContent = `Uploading photo ${i+1}…`;
+        btn.textContent = `Uploading photo ${i+1} of ${mediaFiles.length}…`;
         const file = mediaFiles[i];
         const ext = file.name.split('.').pop().toLowerCase();
         const filePath = `products/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
@@ -1942,13 +1942,18 @@ async function publishProduct() {
 
         if (!uploadRes.ok) {
           const errTxt = await uploadRes.text();
-          showToast(`Photo upload failed: ${errTxt}`, 'error');
+          alert(`Photo upload failed:\n\n${errTxt}\n\nStatus: ${uploadRes.status}`);
+          showToast('Photo upload failed. See the alert for details.', 'error');
           btn.disabled = false; btn.textContent = 'Publish to Store';
           return;
         }
 
         mediaUrls.push(`${SUPABASE_URL}/storage/v1/object/public/redhotdealz-media/${filePath}`);
       }
+    } else {
+      showToast('Please add at least one photo before publishing.', 'error');
+      btn.disabled = false; btn.textContent = 'Publish to Store';
+      return;
     }
 
     btn.textContent = 'Saving product…';
