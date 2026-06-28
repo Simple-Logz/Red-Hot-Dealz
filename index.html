@@ -1891,183 +1891,165 @@ function removeMedia(idx) {
   if (th) th.remove();
 }
 
+
 /* ════════════════════════════════════════════════
-   ADMIN — PUBLISH PRODUCT
+   ADMIN — PUBLISH PRODUCT (simple, bulletproof)
 ═══════════════════════════════════════════════════ */
 async function publishProduct() {
-  const g = id => document.getElementById(id);
-  const category  = (g('uploadCategory').value || '').trim();
-  const name      = (g('uploadName').value || '').trim();
-  const brand     = (g('uploadBrand').value || '').trim();
-  const price     = parseFloat(g('uploadPrice').value);
-  const retail    = parseFloat(g('uploadRetail').value) || null;
-  const desc      = (g('uploadDesc').value || '').trim();
-  const isHot     = g('uploadHotDeal').checked;
-  const weight    = (g('uploadWeight') && g('uploadWeight').value) ? g('uploadWeight').value : 'under1';
-  const condition = (g('uploadCondition') && g('uploadCondition').value) ? g('uploadCondition').value : 'Brand New';
-  const stock     = (g('uploadStock') && g('uploadStock').value) ? parseInt(g('uploadStock').value) : 1;
+  // Collect all field values
+  const category  = document.getElementById('uploadCategory').value;
+  const name      = document.getElementById('uploadName').value.trim();
+  const brand     = document.getElementById('uploadBrand').value.trim();
+  const price     = parseFloat(document.getElementById('uploadPrice').value);
+  const retail    = parseFloat(document.getElementById('uploadRetail').value) || null;
+  const desc      = document.getElementById('uploadDesc').value.trim();
+  const isHot     = document.getElementById('uploadHotDeal').checked;
 
-  if (!category) { showToast('Please choose a category first.', 'error'); return; }
-  if (!name)     { showToast('Please enter a product name.', 'error'); return; }
-  if (!price || isNaN(price) || price <= 0) { showToast('Please enter a valid price.', 'error'); return; }
+  // Validate required fields
+  if (!category) { alert('Please choose a category.'); return; }
+  if (!name)     { alert('Please enter a product name.'); return; }
+  if (!price || isNaN(price)) { alert('Please enter a valid price.'); return; }
+  if (!mediaFiles || mediaFiles.length === 0) { alert('Please add at least one photo.'); return; }
 
-  const btn = g('publishBtn');
+  const btn = document.getElementById('publishBtn');
   btn.disabled = true;
-  btn.textContent = 'Publishing…';
+  btn.textContent = 'Uploading photo…';
 
   try {
-    let mediaUrls = [];
+    // Step 1: Upload first photo only (keep it simple)
+    const file = mediaFiles[0];
+    const ext = file.name.split('.').pop().toLowerCase();
+    const fileName = 'product_' + Date.now() + '.' + ext;
 
-    // Upload photos — required for publishing
-    if (mediaFiles && mediaFiles.length > 0) {
-      for (let i = 0; i < mediaFiles.length; i++) {
-        btn.textContent = `Uploading photo ${i+1} of ${mediaFiles.length}…`;
-        const file = mediaFiles[i];
-        const ext = file.name.split('.').pop().toLowerCase();
-        const filePath = `products/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const formData = new FormData();
+    formData.append('', file);
 
-        const uploadRes = await fetch(
-          `${SUPABASE_URL}/storage/v1/object/redhotdealz-media/${filePath}`,
-          {
-            method: 'POST',
-            headers: {
-              'apikey': SUPABASE_ANON,
-              'Authorization': `Bearer ${SUPABASE_ANON}`,
-              'Content-Type': file.type,
-              'x-upsert': 'true'
-            },
-            body: file
-          }
-        );
+    const uploadUrl = SUPABASE_URL + '/storage/v1/object/redhotdealz-media/' + fileName;
+    const uploadRes = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON,
+        'Authorization': 'Bearer ' + SUPABASE_ANON,
+        'x-upsert': 'true',
+        'Content-Type': file.type
+      },
+      body: file
+    });
 
-        if (!uploadRes.ok) {
-          const errTxt = await uploadRes.text();
-          alert(`Photo upload failed:\n\n${errTxt}\n\nStatus: ${uploadRes.status}`);
-          showToast('Photo upload failed. See the alert for details.', 'error');
-          btn.disabled = false; btn.textContent = 'Publish to Store';
-          return;
-        }
-
-        mediaUrls.push(`${SUPABASE_URL}/storage/v1/object/public/redhotdealz-media/${filePath}`);
-      }
-    } else {
-      showToast('Please add at least one photo before publishing.', 'error');
-      btn.disabled = false; btn.textContent = 'Publish to Store';
+    if (!uploadRes.ok) {
+      const err = await uploadRes.text();
+      alert('Photo upload failed: ' + err);
+      btn.disabled = false;
+      btn.textContent = 'Publish to Store';
       return;
     }
 
+    const photoUrl = SUPABASE_URL + '/storage/v1/object/public/redhotdealz-media/' + fileName;
     btn.textContent = 'Saving product…';
 
-    // Insert product via REST API
-    const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+    // Step 2: Save product
+    const product = {
+      name: name,
+      brand: brand,
+      category: category,
+      price: price,
+      retail_price: retail,
+      description: desc,
+      media_urls: [photoUrl],
+      published: true,
+      hot_deal: isHot,
+      sold: false
+    };
+
+    const saveRes = await fetch(SUPABASE_URL + '/rest/v1/products', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'apikey': SUPABASE_ANON,
-        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Authorization': 'Bearer ' + SUPABASE_ANON,
         'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({
-        name, brand, category,
-        price: parseFloat(price),
-        retail_price: retail,
-        description: desc,
-        media_urls: mediaUrls,
-        published: true,
-        hot_deal: isHot,
-        sold: false,
-        weight, condition, stock
-      })
+      body: JSON.stringify(product)
     });
 
-    if (!insertRes.ok) {
-      const errTxt = await insertRes.text();
-      alert(`PUBLISH ERROR:\n${errTxt}\n\nStatus: ${insertRes.status}`);
-      showToast(`Could not save product: ${errTxt}`, 'error');
-      btn.disabled = false; btn.textContent = 'Publish to Store';
+    if (!saveRes.ok) {
+      const err = await saveRes.text();
+      alert('Save failed: ' + err);
+      btn.disabled = false;
+      btn.textContent = 'Publish to Store';
       return;
     }
 
-    // Clear draft
-    try { localStorage.removeItem('rhd_draft'); } catch(e){}
-    try { sessionStorage.removeItem('rhd_draft'); } catch(e){}
+    // SUCCESS
+    alert('"' + name + '" has been published successfully!');
+    
+    // Reset form
+    document.getElementById('uploadCategory').value = '';
+    document.getElementById('uploadName').value = '';
+    document.getElementById('uploadBrand').value = '';
+    document.getElementById('uploadPrice').value = '';
+    document.getElementById('uploadRetail').value = '';
+    document.getElementById('uploadDesc').value = '';
+    document.getElementById('uploadHotDeal').checked = false;
+    document.getElementById('mediaPreviewGrid').innerHTML = '';
+    mediaFiles = [];
 
-    showToast(`"${name}" is now live on your store!`, 'success');
-    resetUploadForm();
-    setTimeout(() => loadProducts(), 1000);
+    btn.disabled = false;
+    btn.textContent = 'Publish to Store';
 
-  } catch(err) {
-    showToast(`Error: ${err.message}`, 'error');
-    btn.disabled = false; btn.textContent = 'Publish to Store';
+    // Reload products
+    await loadProducts();
+
+  } catch(e) {
+    alert('Unexpected error: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = 'Publish to Store';
   }
-}
-
-function resetUploadForm() {
-  const fields = ['uploadCategory','uploadName','uploadBrand','uploadPrice','uploadRetail','uploadDesc','uploadWeight','uploadCondition'];
-  fields.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-  const hot = document.getElementById('uploadHotDeal'); if(hot) hot.checked = false;
-  const stock = document.getElementById('uploadStock'); if(stock) stock.value = '1';
-  const grid = document.getElementById('mediaPreviewGrid'); if(grid) grid.innerHTML = '';
-  mediaFiles = [];
-  updateDiscountPreview();
 }
 
 /* ════════════════════════════════════════════════
    DRAFT SAVE / RESTORE
 ═══════════════════════════════════════════════════ */
 function saveDraft() {
-  try {
-    const g = id => document.getElementById(id);
-    const draft = {
-      category:  g('uploadCategory') ? g('uploadCategory').value : '',
-      name:      g('uploadName') ? g('uploadName').value : '',
-      brand:     g('uploadBrand') ? g('uploadBrand').value : '',
-      price:     g('uploadPrice') ? g('uploadPrice').value : '',
-      retail:    g('uploadRetail') ? g('uploadRetail').value : '',
-      desc:      g('uploadDesc') ? g('uploadDesc').value : '',
-      weight:    g('uploadWeight') ? g('uploadWeight').value : '',
-      condition: g('uploadCondition') ? g('uploadCondition').value : '',
-      stock:     g('uploadStock') ? g('uploadStock').value : '1',
-      isHot:     g('uploadHotDeal') ? g('uploadHotDeal').checked : false,
-      savedAt:   new Date().toLocaleString()
-    };
-    localStorage.setItem('rhd_draft', JSON.stringify(draft));
-    showToast(`Draft saved for "${draft.name || 'product'}" — come back anytime.`, 'success');
-  } catch(e) {
-    showToast('Draft save failed: ' + e.message, 'error');
-  }
+  const draft = {
+    category:  document.getElementById('uploadCategory').value,
+    name:      document.getElementById('uploadName').value,
+    brand:     document.getElementById('uploadBrand').value,
+    price:     document.getElementById('uploadPrice').value,
+    retail:    document.getElementById('uploadRetail').value,
+    desc:      document.getElementById('uploadDesc').value,
+    isHot:     document.getElementById('uploadHotDeal').checked,
+    savedAt:   new Date().toLocaleString()
+  };
+  localStorage.setItem('rhd_draft', JSON.stringify(draft));
+  alert('Draft saved for "' + (draft.name || 'product') + '". Come back anytime.');
 }
 
 function restoreDraft() {
   try {
     const raw = localStorage.getItem('rhd_draft');
-    if (!raw) { showToast('No draft found.', 'error'); return; }
+    if (!raw) { alert('No saved draft found.'); return; }
     const d = JSON.parse(raw);
-    const g = id => document.getElementById(id);
-    if (g('uploadCategory') && d.category) g('uploadCategory').value = d.category;
-    if (g('uploadName') && d.name) g('uploadName').value = d.name;
-    if (g('uploadBrand') && d.brand) g('uploadBrand').value = d.brand;
-    if (g('uploadPrice') && d.price) g('uploadPrice').value = d.price;
-    if (g('uploadRetail') && d.retail) g('uploadRetail').value = d.retail;
-    if (g('uploadDesc') && d.desc) g('uploadDesc').value = d.desc;
-    if (g('uploadWeight') && d.weight) g('uploadWeight').value = d.weight;
-    if (g('uploadCondition') && d.condition) g('uploadCondition').value = d.condition;
-    if (g('uploadStock') && d.stock) g('uploadStock').value = d.stock;
-    if (g('uploadHotDeal')) g('uploadHotDeal').checked = d.isHot || false;
+    document.getElementById('uploadCategory').value = d.category || '';
+    document.getElementById('uploadName').value = d.name || '';
+    document.getElementById('uploadBrand').value = d.brand || '';
+    document.getElementById('uploadPrice').value = d.price || '';
+    document.getElementById('uploadRetail').value = d.retail || '';
+    document.getElementById('uploadDesc').value = d.desc || '';
+    document.getElementById('uploadHotDeal').checked = d.isHot || false;
     updateDiscountPreview();
     const banner = document.getElementById('draftBanner');
     if (banner) banner.classList.add('hidden');
-    showToast(`Draft restored — saved ${d.savedAt}`, 'success');
+    showToast('Draft restored — saved ' + d.savedAt, 'success');
   } catch(e) {
-    showToast('Could not restore draft: ' + e.message, 'error');
+    alert('Could not restore draft: ' + e.message);
   }
 }
 
 function discardDraft() {
-  try { localStorage.removeItem('rhd_draft'); } catch(e){}
+  localStorage.removeItem('rhd_draft');
   const banner = document.getElementById('draftBanner');
   if (banner) banner.classList.add('hidden');
-  showToast('Draft discarded.', 'success');
 }
 
 function checkForDraft() {
@@ -2078,11 +2060,24 @@ function checkForDraft() {
     if (!d.name && !d.price) return;
     const banner = document.getElementById('draftBanner');
     if (!banner) return;
-    banner.innerHTML = `<span style="flex:1">Unsaved draft: <strong>${d.name || 'Unnamed product'}</strong> — saved ${d.savedAt}</span><button onclick="restoreDraft()" style="background:#cc0000;color:white;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;white-space:nowrap">Restore</button><button onclick="discardDraft()" style="background:none;border:1px solid #ddd;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;margin-left:6px;white-space:nowrap">Discard</button>`;
+    banner.innerHTML = '<span style="flex:1">Unsaved draft: <strong>' + (d.name || 'product') + '</strong> — ' + d.savedAt + '</span>' +
+      '<button onclick="restoreDraft()" style="background:#cc0000;color:white;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;margin-left:12px">Restore</button>' +
+      '<button onclick="discardDraft()" style="background:none;border:1px solid #ddd;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;margin-left:6px">Discard</button>';
     banner.classList.remove('hidden');
   } catch(e) {}
 }
 
+function resetUploadForm() {
+  document.getElementById('uploadCategory').value = '';
+  document.getElementById('uploadName').value = '';
+  document.getElementById('uploadBrand').value = '';
+  document.getElementById('uploadPrice').value = '';
+  document.getElementById('uploadRetail').value = '';
+  document.getElementById('uploadDesc').value = '';
+  document.getElementById('uploadHotDeal').checked = false;
+  document.getElementById('mediaPreviewGrid').innerHTML = '';
+  mediaFiles = [];
+}
 
 
 /* ════════════════════════════════════════════════
