@@ -1212,9 +1212,7 @@
       </div>
     </div>
     <div class="product-grid" id="productGrid">
-      <div class="empty-state">
-        <p>Loading products…</p>
-      </div>
+      <div style="text-align:center;padding:60px 20px;color:#aaa;font-size:14px">Loading…</div>
     </div>
 
     <!-- PAGINATION -->
@@ -1804,16 +1802,9 @@ function initSupabase() {
 }
 
 function loadSupabaseThenInit() {
-  // Only load Supabase library if credentials are configured
-  if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON === 'YOUR_SUPABASE_ANON_KEY') {
-    loadProducts(); // demo mode right away
-    return;
-  }
-  const s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-  s.onload = () => { initSupabase(); loadProducts(); };
-  s.onerror = () => { console.warn('Supabase CDN failed, demo mode'); loadProducts(); };
-  document.head.appendChild(s);
+  // Skip CDN entirely — use REST API directly (proven to work)
+  handleURLOnLoad();
+  loadProducts();
 }
 
 /* ════════════════════════════════════════════════
@@ -2029,19 +2020,20 @@ function renderGrid(products) {
 ═══════════════════════════════════════════════════ */
 async function loadProducts() {
   try {
-    // Always try Supabase REST API directly — same approach as publish
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(`${SUPABASE_URL}/rest/v1/products?order=sort_order.asc,created_at.desc`, {
       headers: {
         'apikey': SUPABASE_ANON,
         'Authorization': `Bearer ${SUPABASE_ANON}`
-      }
+      },
+      signal: controller.signal
     });
-
+    clearTimeout(timeout);
     if (res.ok) {
       const data = await res.json();
       allProducts = data || [];
     } else {
-      // Fallback to demo if Supabase fails
       allProducts = DEMO_PRODUCTS;
     }
   } catch(e) {
@@ -3668,6 +3660,5 @@ function handleURLOnLoad() {
   window.pendingHash = readHash();
 }
 
-// INIT — this starts everything
-handleURLOnLoad();
+// INIT
 loadSupabaseThenInit();
