@@ -1329,6 +1329,64 @@
 
       <!-- ── MY PRODUCTS TAB ── -->
       <div id="tabProducts" class="hidden">
+
+        <!-- SEARCH & FILTERS -->
+        <div style="padding:16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:10px">
+
+          <!-- Search -->
+          <div style="display:flex;align-items:center;gap:8px;background:var(--faint);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" id="adminSearch" placeholder="Search your products…" oninput="filterAdminProducts()"
+              style="border:none;background:none;font-size:14px;font-family:inherit;color:var(--ink);outline:none;width:100%" />
+            <button onclick="clearAdminFilters()" style="background:none;border:none;color:#aaa;font-size:16px;cursor:pointer">✕</button>
+          </div>
+
+          <!-- Filters row -->
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+
+            <!-- Category filter -->
+            <select id="adminFilterCat" onchange="filterAdminProducts()"
+              style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--ink);background:white;cursor:pointer;outline:none">
+              <option value="">All Categories</option>
+            </select>
+
+            <!-- Status filter -->
+            <select id="adminFilterStatus" onchange="filterAdminProducts()"
+              style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--ink);background:white;cursor:pointer;outline:none">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="sold">Sold</option>
+              <option value="hot">Hot Deals</option>
+              <option value="low">Low Visibility</option>
+            </select>
+
+            <!-- Date filter -->
+            <select id="adminFilterDate" onchange="filterAdminProducts()"
+              style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--ink);background:white;cursor:pointer;outline:none">
+              <option value="">All Dates</option>
+              <option value="today">Listed Today</option>
+              <option value="week">Last 7 Days</option>
+              <option value="month">Last 30 Days</option>
+              <option value="older">Older than 30 Days</option>
+            </select>
+
+            <!-- Sort -->
+            <select id="adminSort" onchange="filterAdminProducts()"
+              style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--ink);background:white;cursor:pointer;outline:none">
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="price_high">Price: High to Low</option>
+              <option value="price_low">Price: Low to High</option>
+              <option value="views">Most Viewed</option>
+            </select>
+
+          </div>
+
+          <!-- Results count -->
+          <div id="adminFilterCount" style="font-size:12px;color:var(--mid)"></div>
+
+        </div>
+
         <div class="admin-products-grid" id="adminProductsList">
           <div style="color:#444;text-align:center;padding:60px 20px;font-size:14px">Loading your products…</div>
         </div>
@@ -2267,82 +2325,175 @@ function resetUploadForm() {
 
 
 /* ════════════════════════════════════════════════
-   ADMIN — PRODUCTS LIST
+   ADMIN — SEARCH & FILTER
 ═══════════════════════════════════════════════════ */
+function filterAdminProducts() {
+  if (!window.adminProducts) return;
+
+  const search   = (document.getElementById('adminSearch').value || '').toLowerCase().trim();
+  const catFilter    = document.getElementById('adminFilterCat').value;
+  const statusFilter = document.getElementById('adminFilterStatus').value;
+  const dateFilter   = document.getElementById('adminFilterDate').value;
+  const sort         = document.getElementById('adminSort').value;
+
+  let filtered = [...window.adminProducts];
+
+  // Search
+  if (search) {
+    filtered = filtered.filter(p =>
+      (p.name || '').toLowerCase().includes(search) ||
+      (p.brand || '').toLowerCase().includes(search) ||
+      (p.description || '').toLowerCase().includes(search) ||
+      (p.category || '').toLowerCase().includes(search)
+    );
+  }
+
+  // Category
+  if (catFilter) {
+    filtered = filtered.filter(p => p.category === catFilter);
+  }
+
+  // Status
+  if (statusFilter === 'active')  filtered = filtered.filter(p => !p.sold);
+  if (statusFilter === 'sold')    filtered = filtered.filter(p => p.sold);
+  if (statusFilter === 'hot')     filtered = filtered.filter(p => p.hot_deal);
+  if (statusFilter === 'low') {
+    filtered = filtered.filter(p => {
+      const days = Math.floor((new Date() - new Date(p.created_at)) / (1000*60*60*24));
+      return !p.sold && days > 14 && (p.views || 0) < 3;
+    });
+  }
+
+  // Date
+  const now = new Date();
+  if (dateFilter === 'today') {
+    filtered = filtered.filter(p => {
+      const d = new Date(p.created_at);
+      return d.toDateString() === now.toDateString();
+    });
+  }
+  if (dateFilter === 'week') {
+    const cutoff = new Date(now - 7*24*60*60*1000);
+    filtered = filtered.filter(p => new Date(p.created_at) >= cutoff);
+  }
+  if (dateFilter === 'month') {
+    const cutoff = new Date(now - 30*24*60*60*1000);
+    filtered = filtered.filter(p => new Date(p.created_at) >= cutoff);
+  }
+  if (dateFilter === 'older') {
+    const cutoff = new Date(now - 30*24*60*60*1000);
+    filtered = filtered.filter(p => new Date(p.created_at) < cutoff);
+  }
+
+  // Sort
+  if (sort === 'newest')     filtered.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  if (sort === 'oldest')     filtered.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+  if (sort === 'price_high') filtered.sort((a,b) => b.price - a.price);
+  if (sort === 'price_low')  filtered.sort((a,b) => a.price - b.price);
+  if (sort === 'views')      filtered.sort((a,b) => (b.views||0) - (a.views||0));
+
+  // Update count
+  const total = window.adminProducts.length;
+  const countEl = document.getElementById('adminFilterCount');
+  if (countEl) {
+    countEl.textContent = filtered.length === total
+      ? `${total} product${total !== 1 ? 's' : ''} total`
+      : `Showing ${filtered.length} of ${total} products`;
+  }
+
+  renderAdminProductRows(filtered);
+}
+
+function clearAdminFilters() {
+  document.getElementById('adminSearch').value = '';
+  document.getElementById('adminFilterCat').value = '';
+  document.getElementById('adminFilterStatus').value = '';
+  document.getElementById('adminFilterDate').value = '';
+  document.getElementById('adminSort').value = 'newest';
+  filterAdminProducts();
+}
+
+function populateAdminCategoryFilter(products) {
+  const sel = document.getElementById('adminFilterCat');
+  if (!sel) return;
+  const cats = [...new Set(products.map(p => p.category).filter(Boolean))];
+  const standardIds = CATEGORIES.map(c => c.id);
+  sel.innerHTML = '<option value="">All Categories</option>' +
+    cats.map(id => {
+      const std = CATEGORIES.find(c => c.id === id);
+      const label = std ? std.label : id.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase());
+      return `<option value="${id}">${label}</option>`;
+    }).join('');
+}
+
+
 async function loadAdminProducts() {
   const list = document.getElementById('adminProductsList');
   list.innerHTML = '<div style="color:#444;text-align:center;padding:40px">Loading…</div>';
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?order=sort_order.asc,created_at.desc`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?order=created_at.desc`, {
       headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
     });
     if (!res.ok) throw new Error(await res.text());
     const products = await res.json();
-    window.adminProducts = products; // Store for edit function
-
-    if (!products.length) {
-      list.innerHTML = '<div style="color:#444;text-align:center;padding:60px">No products yet. Add your first one!</div>';
-      return;
-    }
-    list.innerHTML = products.map(p => {
-      const cat = getCatMeta(p.category);
-      const thumb = p.media_urls && p.media_urls[0]
-        ? `<img src="${p.media_urls[0]}" style="width:100%;height:100%;object-fit:cover;border-radius:8px" alt="" />`
-        : '<div style="width:100%;height:100%;background:#f0f0f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px">📦</div>';
-      const hotBadge  = p.hot_deal ? `<span class="admin-hot-badge">✦ Hot</span>` : '';
-      const views = p.views || 0;
-
-      // Days listed
-      const created = p.created_at ? new Date(p.created_at) : new Date();
-      const daysListed = Math.floor((new Date() - created) / (1000 * 60 * 60 * 24));
-      const daysLabel = daysListed === 0 ? 'Listed today' : daysListed === 1 ? '1 day listed' : `${daysListed} days listed`;
-
-      // Status
-      let status, statusColor, statusBg;
-      if (p.sold) {
-        status = '● Sold'; statusColor = '#6b7280'; statusBg = '#f3f4f6';
-      } else if (views >= 10 && !p.sold) {
-        status = '🔥 High interest — consider price'; statusColor = '#d97706'; statusBg = '#fffbeb';
-      } else if (daysListed > 14 && views < 3) {
-        status = '⚠ Low visibility — check photos/price'; statusColor = '#dc2626'; statusBg = '#fef2f2';
-      } else {
-        status = '● Active'; statusColor = '#16a34a'; statusBg = '#f0fdf4';
-      }
-
-      return `<div class="admin-product-row" id="row-${p.id}" draggable="true" data-id="${p.id}"
-        ondragstart="dragStart(event)" ondragover="dragOver2(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
-        <div style="font-size:22px;color:#ccc;padding:0 10px 0 0;cursor:grab;flex-shrink:0;user-select:none">☰</div>
-        <div class="admin-product-thumb">${thumb}</div>
-        <div class="admin-product-info">
-          <div class="admin-product-name">${p.name} ${hotBadge}</div>
-          <div class="admin-product-meta">
-            <span class="admin-product-cat">${cat.label}</span>
-            &nbsp;$${Number(p.price).toFixed(2)}
-            ${p.retail_price ? `<span style="color:#aaa;text-decoration:line-through;margin-left:6px;font-size:11px">$${Number(p.retail_price).toFixed(2)}</span>` : ''}
-          </div>
-          <div style="display:flex;gap:12px;align-items:center;margin-top:5px;flex-wrap:wrap">
-            <span style="font-size:11px;color:#888">👁 ${views} view${views !== 1 ? 's' : ''}</span>
-            <span style="font-size:11px;color:#888">📅 ${daysLabel}</span>
-            <span style="font-size:11px;font-weight:600;color:${statusColor};background:${statusBg};padding:2px 8px;border-radius:4px">${status}</span>
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
-          <button onclick="editProduct(${p.id})" style="background:#f4f5f7;border:1.5px solid #e5e7eb;color:#111;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">✏ Edit</button>
-          <button onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g, "\\'")}' )" style="background:#fff0f0;border:1.5px solid #fecaca;color:#cc0000;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">✕ Delete</button>
-        </div>
-      </div>`;
-    }).join('');
-
-    // Add hint above list
-    list.insertAdjacentHTML('afterbegin', '<div style="font-size:12px;color:#aaa;text-align:center;padding:8px 0 4px;border-bottom:1px solid #f0f0f0;margin-bottom:8px">☰ Drag products up or down to reorder — order reflects on your store</div>');
-
-    // Initialise touch drag support
-    initDragDrop();
-
+    window.adminProducts = products;
+    populateAdminCategoryFilter(products);
+    const countEl = document.getElementById('adminFilterCount');
+    if (countEl) countEl.textContent = `${products.length} product${products.length !== 1 ? 's' : ''} total`;
+    renderAdminProductRows(products);
   } catch(e) {
     list.innerHTML = `<div style="color:var(--flash);text-align:center;padding:40px">Error: ${e.message}</div>`;
   }
 }
+
+function renderAdminProductRows(products) {
+  const list = document.getElementById('adminProductsList');
+  if (!products.length) {
+    list.innerHTML = '<div style="color:#444;text-align:center;padding:60px">No products match your filters.</div>';
+    return;
+  }
+  list.innerHTML = '<div style="font-size:12px;color:#aaa;text-align:center;padding:8px 0 4px;border-bottom:1px solid #f0f0f0;margin-bottom:8px">☰ Drag to reorder — order reflects on your store</div>' +
+  products.map((p, idx) => {
+    const cat = getCatMeta(p.category);
+    const thumb = p.media_urls && p.media_urls[0]
+      ? `<img src="${p.media_urls[0]}" style="width:100%;height:100%;object-fit:cover;border-radius:8px" alt="" />`
+      : '<div style="width:100%;height:100%;background:#f0f0f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px">📦</div>';
+    const hotBadge = p.hot_deal ? `<span class="admin-hot-badge">✦ Hot</span>` : '';
+    const views = p.views || 0;
+    const created = p.created_at ? new Date(p.created_at) : new Date();
+    const daysListed = Math.floor((new Date() - created) / (1000*60*60*24));
+    const daysLabel = daysListed === 0 ? 'Listed today' : daysListed === 1 ? '1 day listed' : `${daysListed} days listed`;
+    let status, statusColor, statusBg;
+    if (p.sold) { status = '● Sold'; statusColor = '#6b7280'; statusBg = '#f3f4f6'; }
+    else if (views >= 10) { status = '🔥 High interest'; statusColor = '#d97706'; statusBg = '#fffbeb'; }
+    else if (daysListed > 14 && views < 3) { status = '⚠ Low visibility'; statusColor = '#dc2626'; statusBg = '#fef2f2'; }
+    else { status = '● Active'; statusColor = '#16a34a'; statusBg = '#f0fdf4'; }
+    return `<div class="admin-product-row" id="row-${p.id}" draggable="true" data-id="${p.id}" data-idx="${idx}"
+      ondragstart="dragStart(event)" ondragover="dragOver2(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)" style="cursor:grab">
+      <div style="font-size:22px;color:#ccc;padding:0 10px 0 0;cursor:grab;flex-shrink:0;user-select:none">☰</div>
+      <div class="admin-product-thumb">${thumb}</div>
+      <div class="admin-product-info">
+        <div class="admin-product-name">${p.name} ${hotBadge}</div>
+        <div class="admin-product-meta">
+          <span class="admin-product-cat">${cat.label}</span>
+          &nbsp;$${Number(p.price).toFixed(2)}
+          ${p.retail_price ? `<span style="color:#aaa;text-decoration:line-through;margin-left:6px;font-size:11px">$${Number(p.retail_price).toFixed(2)}</span>` : ''}
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:5px;flex-wrap:wrap">
+          <span style="font-size:11px;color:#888">👁 ${views} view${views !== 1 ? 's' : ''}</span>
+          <span style="font-size:11px;color:#888">📅 ${daysLabel}</span>
+          <span style="font-size:11px;font-weight:600;color:${statusColor};background:${statusBg};padding:2px 8px;border-radius:4px">${status}</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+        <button onclick="editProduct(${p.id})" style="background:#f4f5f7;border:1.5px solid #e5e7eb;color:#111;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">✏ Edit</button>
+        <button onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g, "\'")}')" style="background:#fff0f0;border:1.5px solid #fecaca;color:#cc0000;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">✕ Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+  initDragDrop();
+}
+
 
 async function deleteProduct(id, name) {
   if (!confirm(`Are you sure you want to delete "${name}"?\n\nThis cannot be undone.`)) return;
