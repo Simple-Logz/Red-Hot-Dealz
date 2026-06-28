@@ -1664,20 +1664,28 @@ function renderGrid(products) {
 ═══════════════════════════════════════════════════ */
 async function loadProducts() {
   try {
-    if (isSupabaseConfigured) {
-      const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
+    // Always try Supabase REST API directly — same approach as publish
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?order=created_at.desc`, {
+      headers: {
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`
+      }
+    });
+
+    if (res.ok) {
+      const data = await res.json();
       allProducts = data || [];
     } else {
+      // Fallback to demo if Supabase fails
       allProducts = DEMO_PRODUCTS;
     }
-    showHomeView();
   } catch(e) {
     console.error('Load error:', e);
     allProducts = DEMO_PRODUCTS;
-    showHomeView();
   }
-  // Open admin AFTER Supabase is fully ready
+
+  showHomeView();
+  // Open admin AFTER products are loaded
   if (window.adminPending) { window.adminPending = false; openAdmin(); }
 }
 
