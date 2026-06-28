@@ -48,7 +48,7 @@
     },
     "contactPoint": {
       "@type": "ContactPoint",
-      "email": "hello@redhotdealz.com",
+      "email": "redhotdealz2025@gmail.com",
       "contactType": "customer service"
     },
     "sameAs": [
@@ -375,20 +375,16 @@
 
   .trust-row {
     display: flex; align-items: center; justify-content: center;
-    gap: 20px; flex-wrap: wrap;
-    font-size: 12px; color: var(--mid); font-weight: 500;
-    padding: 10px 24px 14px;
+    gap: 24px; flex-wrap: wrap;
+    padding: 11px 24px;
     background: var(--faint); border-bottom: 1px solid var(--border);
   }
-  .trust-row span::before { content: '✓ '; color: var(--success); }
-  .trust-row {
-    display: flex; align-items: center; justify-content: center;
-    gap: 16px; flex-wrap: wrap;
-    font-size: 12px; color: var(--mid); font-weight: 500;
-    padding: 12px 24px;
-    background: var(--faint); border-bottom: 1px solid var(--border);
+  .trust-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--ink); font-weight: 600;
+    white-space: nowrap;
   }
-  .trust-row span::before { content: '✓ '; color: var(--success); }
+  .trust-item svg { flex-shrink: 0; display: block; }
 
   /* ─── HOT DEAL NAV ITEM ───────────────────────────── */
   .nav-link-hot { color: #c2410c !important; font-weight: 600 !important; }
@@ -1133,7 +1129,7 @@
     <!-- Contact -->
     <div class="menu-section-title">Contact Us</div>
     <div class="menu-contact-item">WhatsApp: <a href="https://wa.me/15550000000">+1 555 000 0000</a></div>
-    <div class="menu-contact-item" style="border-bottom:none">Email: <a href="mailto:hello@redhotdealz.com">hello@redhotdealz.com</a></div>
+    <div class="menu-contact-item" style="border-bottom:none">Email: <a href="mailto:redhotdealz2025@gmail.com">redhotdealz2025@gmail.com</a></div>
 
   </div>
 
@@ -1169,9 +1165,22 @@
 
   <!-- TRUST ROW -->
   <div class="trust-row">
-    <span>100% Authentic</span>
-    <span>Secure Checkout</span>
-    <span>Up to 50% Off</span>
+    <span class="trust-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+      100% Authentic
+    </span>
+    <span class="trust-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1" fill="#111"/></svg>
+      Secure Checkout
+    </span>
+    <span class="trust-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      Fast USPS Shipping
+    </span>
+    <span class="trust-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.5" fill="#111" stroke="none"/></svg>
+      Up to 70% Off
+    </span>
   </div>
   </div><!-- /trust-row -->
   </div><!-- /sticky-header -->
@@ -1224,7 +1233,7 @@
       <a href="https://instagram.com/redhotdealz" style="color:#aaa;font-size:13px" target="_blank">Instagram</a>
       <a href="https://www.facebook.com/profile.php?id=61591063247009" style="color:#aaa;font-size:13px" target="_blank">Facebook</a>
       <a href="https://wa.me/15550000000" style="color:#aaa;font-size:13px" target="_blank">WhatsApp</a>
-      <a href="mailto:hello@redhotdealz.com" style="color:#aaa;font-size:13px">Email</a>
+      <a href="mailto:redhotdealz2025@gmail.com" style="color:#aaa;font-size:13px">Email</a>
     </div>
     <div style="display:flex;gap:20px;justify-content:center;margin-bottom:16px;flex-wrap:wrap">
       <button onclick="showAbout()" style="background:none;border:none;color:#aaa;font-size:13px;cursor:pointer">About Us</button>
@@ -1554,7 +1563,7 @@
       <h2 style="font-family:var(--font-head);font-size:24px;font-weight:800;margin-bottom:16px">About RedHotDealz</h2>
       <p style="color:#6b7280;line-height:1.8;margin-bottom:12px">RedHotDealz is your go-to destination for brand new products at deeply discounted prices. We source directly from overstock warehouses and return centres, which means you get genuine, brand new items at up to 70-80% below retail prices.</p>
       <p style="color:#6b7280;line-height:1.8;margin-bottom:12px">Every product we sell is authentic. No knock-offs. No counterfeits. Just real brands, real products, at prices you won't find anywhere else.</p>
-      <p style="color:#6b7280;line-height:1.8">We ship via USPS across the United States and internationally. Questions? Reach us at <a href="mailto:hello@redhotdealz.com" style="color:#cc0000">hello@redhotdealz.com</a> or on <a href="https://wa.me/15550000000" style="color:#cc0000">WhatsApp</a>.</p>
+      <p style="color:#6b7280;line-height:1.8">We ship via USPS across the United States and internationally. Questions? Reach us at <a href="mailto:redhotdealz2025@gmail.com" style="color:#cc0000">redhotdealz2025@gmail.com</a> or on <a href="https://wa.me/15550000000" style="color:#cc0000">WhatsApp</a>.</p>
     </div>
   </div>
 </div>
@@ -1575,7 +1584,7 @@
       </div>
       <div style="margin-bottom:20px">
         <div style="font-weight:700;margin-bottom:6px">What is your return policy?</div>
-        <div style="color:#6b7280;line-height:1.7">We accept returns within 7 days of delivery if the item is faulty or not as described. Contact us at hello@redhotdealz.com to initiate a return.</div>
+        <div style="color:#6b7280;line-height:1.7">We accept returns within 7 days of delivery if the item is faulty or not as described. Contact us at redhotdealz2025@gmail.com to initiate a return.</div>
       </div>
       <div style="margin-bottom:20px">
         <div style="font-weight:700;margin-bottom:6px">Is payment secure?</div>
@@ -1587,7 +1596,7 @@
       </div>
       <div>
         <div style="font-weight:700;margin-bottom:6px">How do I contact you?</div>
-        <div style="color:#6b7280;line-height:1.7">Email: <a href="mailto:hello@redhotdealz.com" style="color:#cc0000">hello@redhotdealz.com</a> or WhatsApp: <a href="https://wa.me/15550000000" style="color:#cc0000">+1 555 000 0000</a></div>
+        <div style="color:#6b7280;line-height:1.7">Email: <a href="mailto:redhotdealz2025@gmail.com" style="color:#cc0000">redhotdealz2025@gmail.com</a> or WhatsApp: <a href="https://wa.me/15550000000" style="color:#cc0000">+1 555 000 0000</a></div>
       </div>
     </div>
   </div>
@@ -1603,7 +1612,7 @@
       <p style="color:#6b7280;line-height:1.8;margin-bottom:12px">RedHotDealz collects your name, phone number, and delivery address when you place an order. This information is used solely to process and deliver your order.</p>
       <p style="color:#6b7280;line-height:1.8;margin-bottom:12px">Payment information is processed securely by Stripe. We never store your card details.</p>
       <p style="color:#6b7280;line-height:1.8;margin-bottom:12px">We do not sell your personal information to third parties.</p>
-      <p style="color:#6b7280;line-height:1.8">For questions about your data, contact us at hello@redhotdealz.com.</p>
+      <p style="color:#6b7280;line-height:1.8">For questions about your data, contact us at redhotdealz2025@gmail.com.</p>
     </div>
   </div>
 </div>
