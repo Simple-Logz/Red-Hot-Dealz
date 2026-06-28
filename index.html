@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- RedHotDealz v2.1 - Supabase connected -->
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -1055,8 +1056,8 @@
 /* ════════════════════════════════════════════════
    CONFIG — Replace these with your Supabase values
 ═══════════════════════════════════════════════════ */
-const SUPABASE_URL  = 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL  = 'https://rijtxmpkgyfnnijqcnrw.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpanR4bXBrZ3lmbm5panFjbnJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1OTY3NTUsImV4cCI6MjA5ODE3Mjc1NX0.nzpDizroeWS63VJI1cL7EVVR-nS1v4Yep2PSwaI5N-c';
 
 /* ════════════════════════════════════════════════
    CATEGORIES — Edit this list freely
@@ -1576,9 +1577,9 @@ async function publishProduct() {
       for (const file of mediaFiles) {
         const ext = file.name.split('.').pop();
         const path = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { data, error } = await supabase.storage.from('flashdrop-media').upload(path, file, { cacheControl: '3600' });
+        const { data, error } = await supabase.storage.from('redhotdealz-media').upload(path, file, { cacheControl: '3600' });
         if (error) throw error;
-        const { data: { publicUrl } } = supabase.storage.from('flashdrop-media').getPublicUrl(path);
+        const { data: { publicUrl } } = supabase.storage.from('redhotdealz-media').getPublicUrl(path);
         mediaUrls.push(publicUrl);
       }
 
