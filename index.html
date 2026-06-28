@@ -1890,14 +1890,13 @@ async function publishProduct() {
   const retail    = parseFloat(document.getElementById('uploadRetail').value) || null;
   const desc      = document.getElementById('uploadDesc').value.trim();
   const isHot     = document.getElementById('uploadHotDeal').checked;
-  const weight    = document.getElementById('uploadWeight').value || 'under1';
-  const condition = document.getElementById('uploadCondition') ? document.getElementById('uploadCondition').value || 'Brand New' : 'Brand New';
+  const weight    = document.getElementById('uploadWeight') ? (document.getElementById('uploadWeight').value || 'under1') : 'under1';
+  const condition = document.getElementById('uploadCondition') ? (document.getElementById('uploadCondition').value || 'Brand New') : 'Brand New';
   const stock     = parseInt(document.getElementById('uploadStock') ? document.getElementById('uploadStock').value : 1) || 1;
 
   if (!category) { showToast('Please choose a category.', 'error'); return; }
   if (!name)     { showToast('Please enter a product name.', 'error'); return; }
-  if (!price)    { showToast('Please enter your selling price.', 'error'); return; }
-  // Photo is optional — you can add it later
+  if (!price || isNaN(price)) { showToast('Please enter a valid selling price.', 'error'); return; }
 
   const btn = document.getElementById('publishBtn');
   btn.disabled = true; btn.textContent = 'Uploading…';
@@ -1906,42 +1905,68 @@ async function publishProduct() {
     let mediaUrls = [];
 
     if (isSupabaseConfigured) {
-      // Upload media files to Supabase Storage if any
+      // Upload photos first
       for (const file of mediaFiles) {
-        const ext = file.name.split('.').pop();
+        btn.textContent = 'Uploading photos…';
+        const ext  = file.name.split('.').pop();
         const path = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { data, error } = await supabase.storage.from('redhotdealz-media').upload(path, file, { cacheControl: '3600' });
-        if (error) throw error;
-        const { data: { publicUrl } } = supabase.storage.from('redhotdealz-media').getPublicUrl(path);
-        mediaUrls.push(publicUrl);
+        const { error: uploadErr } = await supabase.storage
+          .from('redhotdealz-media')
+          .upload(path, file, { cacheControl: '3600', upsert: true });
+        if (uploadErr) {
+          console.error('Photo upload error:', uploadErr);
+          showToast(`Photo upload failed: ${uploadErr.message}`, 'error');
+          btn.disabled = false; btn.textContent = 'Publish to Store';
+          return;
+        }
+        const { data: urlData } = supabase.storage.from('redhotdealz-media').getPublicUrl(path);
+        mediaUrls.push(urlData.publicUrl);
       }
 
-      // Save product to database
-      const { error: dbErr } = await supabase.from('products').insert({
-        name, brand, category, price, retail_price: retail, description: desc,
-        media_urls: mediaUrls, published: true, hot_deal: isHot, sold: false,
-        weight, condition, stock
-      });
-      if (dbErr) throw dbErr;
+      btn.textContent = 'Saving product…';
+
+      // Save to Supabase — bypass RLS using anon key with public insert policy
+      const { data, error: dbErr } = await supabase.from('products').insert({
+        name, brand, category,
+        price: parseFloat(price),
+        retail_price: retail,
+        description: desc,
+        media_urls: mediaUrls,
+        published: true,
+        hot_deal: isHot,
+        sold: false,
+        weight,
+        condition,
+        stock
+      }).select();
+
+      if (dbErr) {
+        console.error('Database error:', dbErr);
+        showToast(`Save failed: ${dbErr.message}`, 'error');
+        btn.disabled = false; btn.textContent = 'Publish to Store';
+        return;
+      }
+
+      showToast(`"${name}" is now live on your store!`, 'success');
 
     } else {
-      // Demo mode — add to local array
+      // Demo mode
       const demo = {
-        id: Date.now(), name, brand, category, price,
-        retail_price: retail, description: desc,
+        id: Date.now(), name, brand, category,
+        price, retail_price: retail, description: desc,
         media_urls: [], hot_deal: isHot, sold: false,
         weight, condition, stock
       };
       allProducts.unshift(demo);
+      showToast(`"${name}" added (demo mode — not saved to database).`, 'success');
     }
 
-    showToast(`"${name}" is now live${isHot ? ' as a Hot Deal' : ''}.`, 'success');
     resetUploadForm();
     await loadProducts();
 
   } catch(e) {
     console.error('Publish error:', e);
-    showToast(`Error: ${e.message}`, 'error');
+    showToast(`Something went wrong: ${e.message}`, 'error');
   } finally {
     btn.disabled = false; btn.textContent = 'Publish to Store';
   }
