@@ -53,8 +53,17 @@
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
 
   /* ─── NAV ─────────────────────────────────────────────── */
+
+  /* ─── STICKY HEADER ──────────────────────────────────── */
+  .sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 99;
+    background: var(--white);
+  }
+
   nav {
-    position: sticky; top: 0; z-index: 100;
+    position: relative; top: auto; z-index: 100;
     background: #ffffff;
     border-bottom: 4px solid #cc0000;
     padding: 0 28px;
@@ -836,6 +845,9 @@
 ═══════════════════════════════════════════ -->
 <div id="storefront">
 
+  <!-- STICKY HEADER WRAPPER -->
+  <div class="sticky-header">
+
   <!-- NAV -->
   <nav>
     <div class="nav-logo" onclick="showHomeView();clearSearch();" style="cursor:pointer">
@@ -944,6 +956,8 @@
     <span>Secure Checkout</span>
     <span>Up to 50% Off</span>
   </div>
+  </div><!-- /trust-row -->
+  </div><!-- /sticky-header -->
 
   <!-- SEARCH -->
   <div class="search-wrap">
