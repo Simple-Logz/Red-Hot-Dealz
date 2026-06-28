@@ -2016,23 +2016,45 @@ function renderGrid(products) {
    LOAD PRODUCTS
 ═══════════════════════════════════════════════════ */
 async function loadProducts() {
+  const grid = document.getElementById('productGrid');
+  if (grid) grid.innerHTML = '<div style="text-align:center;padding:60px;color:#aaa;font-size:14px">Loading…</div>';
+
   try {
-    const res = await fetch(SUPABASE_URL+'/rest/v1/products?order=sort_order.asc,created_at.desc',{
-      headers:{'apikey':SUPABASE_ANON,'Authorization':'Bearer '+SUPABASE_ANON}
+    const res = await fetch(SUPABASE_URL + '/rest/v1/products?order=sort_order.asc,created_at.desc', {
+      headers: {
+        'apikey': SUPABASE_ANON,
+        'Authorization': 'Bearer ' + SUPABASE_ANON
+      }
     });
-    allProducts = res.ok ? (await res.json()||[]) : DEMO_PRODUCTS;
-  } catch(e){ allProducts = DEMO_PRODUCTS; }
-  if (window.pendingHash) { routeFromHash(window.pendingHash); window.pendingHash=null; }
-  else showHomeView();
-  if (window.adminPending) { window.adminPending=false; openAdmin(); }
+    if (res.ok) {
+      const data = await res.json();
+      allProducts = Array.isArray(data) ? data : [];
+    } else {
+      console.error('Supabase error:', res.status, await res.text());
+      allProducts = [];
+    }
+  } catch(e) {
+    console.error('Fetch error:', e);
+    allProducts = [];
+  }
+
+  // Always show products — even if empty
+  if (window.pendingHash) {
+    routeFromHash(window.pendingHash);
+    window.pendingHash = null;
+  } else {
+    showHomeView();
+  }
+
+  if (window.adminPending) { window.adminPending = false; openAdmin(); }
   if (window.paymentSuccess) {
-    window.paymentSuccess=false;
-    cart=[]; updateCartUI();
-    setTimeout(()=>showToast('Payment successful! Thank you for your order.','success'),500);
+    window.paymentSuccess = false;
+    cart = []; updateCartUI();
+    setTimeout(() => showToast('Payment successful! Thank you for your order.', 'success'), 500);
   }
   if (window.paymentCancelled) {
-    window.paymentCancelled=false;
-    setTimeout(()=>showToast('Payment cancelled. Your cart is still saved.','error'),500);
+    window.paymentCancelled = false;
+    setTimeout(() => showToast('Payment cancelled. Your cart is still saved.', 'error'), 500);
   }
 }
 
@@ -3567,14 +3589,10 @@ function toSlug(str) {
 }
 
 function setURL(hash) {
-  // Set hash — never causes page reload
-  if (hash === '' || hash === null) {
-    // Home — clear hash, show clean domain
-    history.pushState(null, '', window.location.pathname);
-    document.title = 'RedHotDealz — Brand New Products. Up to 50% Off.';
-  } else {
-    history.pushState(null, '', '#' + hash);
-  }
+  try {
+    if (!hash) history.replaceState(null, '', window.location.pathname);
+    else history.pushState(null, '', '#' + hash);
+  } catch(e) {}
 }
 
 function readHash() {
