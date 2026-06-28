@@ -1,12 +1,9 @@
 <!DOCTYPE html>
-<!-- RedHotDealz v2.1 - Supabase connected -->
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<script src="https://js.stripe.com/v3/"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0" />
 <title>RedHotDealz — Brand New. Discounted Prices.</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32,60 C16,54 6,40 10,26 C12,16 20,20 20,20 C18,32 26,37 26,37 C24,22 34,8 40,2 C40,2 38,26 48,30 C48,30 40,16 52,4 C52,4 62,24 56,40 C56,40 62,30 60,20 C60,20 66,34 62,46 C58,56 46,62 32,60 Z' fill='%23cc0000'/%3E%3Cpath d='M32,56 C20,50 12,38 16,26 C18,17 24,21 24,21 C22,32 29,36 29,36 C27,23 36,11 41,5 C41,5 39,26 48,30 C48,30 41,17 52,6 C52,6 61,25 56,39 C56,39 61,30 59,21 C59,21 64,34 60,45 C56,55 45,60 32,56 Z' fill='%23ff5500' opacity='0.85'/%3E%3Cpath d='M33,50 C23,45 17,35 20,25 C22,17 27,21 27,21 C25,30 31,34 31,34 C30,23 37,13 41,7 C41,7 40,26 47,29 C47,29 41,18 51,9 C51,9 58,26 54,38 C54,38 58,30 57,22 C57,22 61,34 58,44 C55,53 45,57 33,50 Z' fill='%23ffaa00' opacity='0.85'/%3E%3Cpath d='M38,24 C37,14 40,6 42,2 C42,2 41,18 47,22 C47,22 42,12 50,4 C50,4 56,18 53,30 C53,30 56,23 55,16 C55,16 59,26 56,36 C53,44 46,47 38,43 C36,36 37,30 38,24 Z' fill='%23ffdd00' opacity='0.8'/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500&family=Righteous&display=swap" rel="stylesheet" />
 <style>
   /* ─── TOKENS ─────────────────────────────────────────── */
@@ -166,7 +163,7 @@
 
   /* Contact section */
   .menu-section-title {
-    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
     letter-spacing: 1px; color: #aaaaaa;
     padding: 14px 20px 6px;
   }
@@ -289,7 +286,7 @@
     letter-spacing: -0.5px;
   }
   .starburst-text-bot {
-    font-family: var(--font-head); font-size: 11px; font-weight: 700;
+    font-family: var(--font-head); font-size: 10px; font-weight: 700;
     fill: rgba(255,255,255,0.85); text-anchor: middle; letter-spacing: 1px;
   }
 
@@ -378,13 +375,13 @@
 
   /* ─── ADMIN SOLD BADGE ────────────────────────────── */
   .admin-sold-badge {
-    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
     letter-spacing: .5px; color: #888;
     background: #1a1a1a; border: 1px solid #333;
     padding: 2px 8px; border-radius: 4px; margin-left: 6px;
   }
   .admin-hot-badge {
-    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
     letter-spacing: .5px; color: #f97316;
     background: #1a0e00; border: 1px solid #3a2200;
     padding: 2px 8px; border-radius: 4px; margin-left: 4px;
@@ -412,7 +409,7 @@
   }
   .btn-back:hover { color: var(--ink); border-color: #d1d5db; }
   .card-cat-label {
-    font-size: 11px; font-weight: 700;
+    font-size: 10px; font-weight: 700;
     text-transform: uppercase; letter-spacing: .6px;
     color: var(--mid); margin-bottom: 4px;
   }
@@ -553,57 +550,6 @@
     font-size: 13px; font-weight: 600; color: var(--mid);
     min-width: 48px; text-align: center;
   }
-
-  .cart-overlay {
-    position: fixed; inset: 0; z-index: 400;
-    background: rgba(0,0,0,0.5);
-    opacity: 0; visibility: hidden;
-    transition: all .25s;
-  }
-  .cart-overlay.open { opacity: 1; visibility: visible; }
-  .cart-drawer {
-    position: absolute; top: 0; right: 0; bottom: 0;
-    width: 100%; max-width: 400px;
-    background: #ffffff;
-    display: flex; flex-direction: column;
-    transform: translateX(100%);
-    transition: transform .25s ease;
-    box-shadow: -8px 0 40px rgba(0,0,0,0.15);
-  }
-  .cart-overlay.open .cart-drawer { transform: translateX(0); }
-  .cart-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; }
-  .cart-title { font-family: var(--font-head); font-size: 20px; font-weight: 700; }
-  .cart-close { width: 32px; height: 32px; border-radius: 50%; background: #f4f5f7; border: none; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
-  .cart-close:hover { background: #e5e7eb; }
-  .cart-items { flex: 1; overflow-y: auto; padding: 16px; }
-  .cart-empty { text-align: center; padding: 60px 20px; color: #6b7280; font-size: 15px; }
-  .cart-item { display: flex; gap: 12px; align-items: center; padding: 14px 0; border-bottom: 1px solid #e5e7eb; }
-  .cart-item-img { width: 64px; height: 64px; border-radius: 8px; background: #f4f5f7; flex-shrink: 0; overflow: hidden; }
-  .cart-item-img img { width: 100%; height: 100%; object-fit: cover; }
-  .cart-item-info { flex: 1; min-width: 0; }
-  .cart-item-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .cart-item-price { font-size: 14px; font-weight: 700; color: #cc0000; }
-  .cart-item-qty { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-  .qty-btn { width: 26px; height: 26px; border-radius: 6px; border: 1.5px solid #e5e7eb; background: white; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .qty-btn:hover { border-color: #cc0000; color: #cc0000; }
-  .qty-num { font-size: 14px; font-weight: 600; min-width: 20px; text-align: center; }
-  .cart-remove { color: #6b7280; font-size: 18px; cursor: pointer; padding: 4px; background: none; border: none; }
-  .cart-remove:hover { color: #cc0000; }
-  .cart-footer { padding: 20px 24px; border-top: 1px solid #e5e7eb; flex-shrink: 0; }
-  .cart-subtotal { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-  .cart-subtotal-label { font-size: 15px; color: #6b7280; }
-  .cart-subtotal-amount { font-family: var(--font-head); font-size: 24px; font-weight: 800; }
-  .btn-checkout { width: 100%; padding: 16px; background: #cc0000; color: white; font-family: var(--font-head); font-size: 16px; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; transition: background .15s; }
-  .btn-checkout:hover { background: #aa0000; }
-  .btn-checkout:disabled { opacity: 0.6; cursor: not-allowed; }
-  .cart-note { font-size: 11px; color: #6b7280; text-align: center; margin-top: 10px; }
-  .btn-add-cart { margin-top: 8px; width: 100%; padding: 9px; border-radius: 7px; border: 1.5px solid #111; background: white; color: #111; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .15s; }
-  .btn-add-cart:hover { background: #111; color: white; }
-  .cart-btn { position: relative; background: none; border: none; cursor: pointer; padding: 8px; border-radius: 8px; display: flex; align-items: center; transition: background .15s; }
-  .cart-btn:hover { background: #f4f5f7; }
-  .cart-count { position: absolute; top: 0; right: 0; background: #cc0000; color: white; font-size: 11px; font-weight: 700; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .2s; border: 2px solid white; }
-  .cart-count.visible { opacity: 1; }
-
   .modal-overlay {
     position: fixed; inset: 0; z-index: 200;
     background: rgba(0,0,0,0.55);
@@ -766,8 +712,8 @@
   .admin-product-name { font-weight: 700; color: var(--ink); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
   .admin-product-meta { font-size: 12px; color: var(--mid); }
   .admin-product-cat { display: inline-block; background: var(--faint); border-radius: 4px; padding: 2px 7px; font-size: 11px; color: var(--mid); margin-right: 4px; }
-  .admin-hot-badge { font-size: 11px; font-weight: 700; color: #f97316; background: #fff7ed; border: 1px solid #fed7aa; padding: 2px 7px; border-radius: 4px; }
-  .admin-sold-badge { font-size: 11px; font-weight: 700; color: var(--mid); background: var(--faint); border: 1px solid var(--border); padding: 2px 7px; border-radius: 4px; }
+  .admin-hot-badge { font-size: 10px; font-weight: 700; color: #f97316; background: #fff7ed; border: 1px solid #fed7aa; padding: 2px 7px; border-radius: 4px; }
+  .admin-sold-badge { font-size: 10px; font-weight: 700; color: var(--mid); background: var(--faint); border: 1px solid var(--border); padding: 2px 7px; border-radius: 4px; }
   .btn-delete { color: #d1d5db; font-size: 16px; padding: 6px; transition: color .15s; background: none; border: none; cursor: pointer; flex-shrink: 0; }
   .btn-delete:hover { color: var(--flash); }
 
@@ -811,15 +757,6 @@
   <span class="logo-red">Red</span><span class="logo-dark">H</span><span class="logo-flame">🔥</span><span class="logo-dark">t</span><span class="logo-red">Dealz</span><span class="logo-dotcom">.com</span>
 </div>
     <div class="nav-right">
-      <!-- Cart button -->
-      <button class="cart-btn" onclick="openCart()" aria-label="Cart">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="9" cy="21" r="1"></circle>
-          <circle cx="20" cy="21" r="1"></circle>
-          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-        </svg>
-        <span class="cart-count" id="cartCount"></span>
-      </button>
       <!-- Admin access is hidden — visit ?admin=open to access -->
       <button class="btn-hamburger" id="hamburgerBtn" onclick="toggleMenu()" aria-label="Menu">
         <span></span><span></span><span></span>
@@ -932,31 +869,6 @@
     Brand new products. Discounted prices.<br>
     © 2026 RedHotDealz.com · All rights reserved.
   </footer>
-</div>
-
-<!-- ══════════════════════════════════════════
-     CART DRAWER
-═══════════════════════════════════════════ -->
-<div class="cart-overlay" id="cartOverlay" onclick="handleCartOverlayClick(event)">
-  <div class="cart-drawer">
-    <div class="cart-header">
-      <div class="cart-title">Your Cart</div>
-      <button class="cart-close" onclick="closeCart()">✕</button>
-    </div>
-    <div class="cart-items" id="cartItems">
-      <div class="cart-empty">Your cart is empty.</div>
-    </div>
-    <div class="cart-footer">
-      <div class="cart-subtotal">
-        <span class="cart-subtotal-label">Total</span>
-        <span class="cart-subtotal-amount" id="cartTotal">$0.00</span>
-      </div>
-      <button class="btn-checkout" id="checkoutBtn" onclick="handleCheckout()">
-        Pay with Stripe
-      </button>
-      <div class="cart-note">Secure payment powered by Stripe</div>
-    </div>
-  </div>
 </div>
 
 <!-- ══════════════════════════════════════════
@@ -1143,9 +1055,8 @@
 /* ════════════════════════════════════════════════
    CONFIG — Replace these with your Supabase values
 ═══════════════════════════════════════════════════ */
-const STRIPE_KEY = 'pk_live_51PO64G01RWuGB0ECPe4e41xZXprGTzqUCGIet3EUTCG8JOMqzRq0zygkGRMJ2lMG8MNwEtbxnCIixc3T3YjKkSiR00Qh7P5JoN';
-const SUPABASE_URL  = 'https://rijtxmpkgyfnnijqcnrw.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpanR4bXBrZ3lmbm5panFjbnJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1OTY3NTUsImV4cCI6MjA5ODE3Mjc1NX0.nzpDizroeWS63VJI1cL7EVVR-nS1v4Yep2PSwaI5N-c';
+const SUPABASE_URL  = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
 
 /* ════════════════════════════════════════════════
    CATEGORIES — Edit this list freely
@@ -1400,7 +1311,7 @@ function renderGrid(products) {
           <div class="card-price">$${Number(p.price).toFixed(2)}</div>
           ${p.retail_price ? `<div class="card-retail">$${Number(p.retail_price).toFixed(2)}</div>` : ''}
         </div>
-        ${p.sold ? `<div style="font-size:12px;color:#999;margin-top:8px;font-weight:600">This item has been sold</div>` : `<button class="card-cta" onclick="event.stopPropagation();openModal(${p.id})">View Deal</button><button class="btn-add-cart" onclick="event.stopPropagation();addToCart(${p.id})">Add to Cart</button>`}
+        ${p.sold ? `<div style="font-size:12px;color:#999;margin-top:8px;font-weight:600">This item has been sold</div>` : `<button class="card-cta" onclick="event.stopPropagation();openModal(${p.id})">View Deal</button>`}
       </div>
     </div>`;
   }).join('');
@@ -1463,7 +1374,6 @@ function openModal(id) {
         </div>
         <div class="form-field"><label>Delivery Address</label><input type="text" id="oAddress" placeholder="Street, City, State, ZIP" /></div>
         <div class="form-field"><label>Notes (optional)</label><textarea id="oNotes" placeholder="Any special requests…" style="min-height:60px"></textarea></div>
-        <button class="btn-add-cart" style="margin-bottom:10px" onclick="addToCart(${p.id});closeModal()">Add to Cart</button>
         <button class="btn-order" onclick="submitOrder(${p.id})">Order Now — $${Number(p.price).toFixed(2)}</button>
       </div>
     </div>`;
@@ -1649,7 +1559,6 @@ async function publishProduct() {
   const retail   = parseFloat(document.getElementById('uploadRetail').value) || null;
   const desc     = document.getElementById('uploadDesc').value.trim();
   const isHot    = document.getElementById('uploadHotDeal').checked;
-  const weight   = document.getElementById('uploadWeight').value || 'under1';
 
   if (!category) { showToast('Please choose a category.', 'error'); return; }
   if (!name)     { showToast('Please enter a product name.', 'error'); return; }
@@ -1667,16 +1576,16 @@ async function publishProduct() {
       for (const file of mediaFiles) {
         const ext = file.name.split('.').pop();
         const path = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { data, error } = await supabase.storage.from('redhotdealz-media').upload(path, file, { cacheControl: '3600' });
+        const { data, error } = await supabase.storage.from('flashdrop-media').upload(path, file, { cacheControl: '3600' });
         if (error) throw error;
-        const { data: { publicUrl } } = supabase.storage.from('redhotdealz-media').getPublicUrl(path);
+        const { data: { publicUrl } } = supabase.storage.from('flashdrop-media').getPublicUrl(path);
         mediaUrls.push(publicUrl);
       }
 
       // Save product to database including hot_deal flag
       const { error: dbErr } = await supabase.from('products').insert({
         name, brand, category, price, retail_price: retail, description: desc,
-        media_urls: mediaUrls, published: true, hot_deal: isHot, sold: false, weight
+        media_urls: mediaUrls, published: true, hot_deal: isHot, sold: false
       });
       if (dbErr) throw dbErr;
 
@@ -1685,7 +1594,7 @@ async function publishProduct() {
       const demo = {
         id: Date.now(), name, brand, category, price,
         retail_price: retail, description: desc,
-        media_urls: [], hot_deal: isHot, sold: false, weight
+        media_urls: [], hot_deal: isHot, sold: false
       };
       allProducts.unshift(demo);
       showToast('Demo mode: product added locally (not saved to database).', 'success');
@@ -1711,7 +1620,6 @@ function resetUploadForm() {
   document.getElementById('uploadRetail').value = '';
   document.getElementById('uploadDesc').value = '';
   document.getElementById('uploadHotDeal').checked = false;
-  document.getElementById('uploadWeight').value = '';
   document.getElementById('mediaPreviewGrid').innerHTML = '';
   mediaFiles = [];
 }
@@ -1791,145 +1699,6 @@ function showToast(msg, type = '') {
 /* ════════════════════════════════════════════════
    BOOT
 ═══════════════════════════════════════════════════ */
-
-/* ════════════════════════════════════════════════
-   CART STATE & FUNCTIONS
-═══════════════════════════════════════════════════ */
-let cart = []; // { id, name, price, qty, image }
-
-function addToCart(productId) {
-  const p = allProducts.find(x => x.id === productId);
-  if (!p || p.sold) return;
-  const existing = cart.find(x => x.id === productId);
-  if (existing) {
-    existing.qty += 1;
-  } else {
-    cart.push({
-      id: p.id,
-      name: p.name,
-      price: p.price,
-      qty: 1,
-      weight: p.weight || 'under1',
-      image: p.media_urls && p.media_urls[0] ? p.media_urls[0] : null
-    });
-  }
-  updateCartUI();
-  showToast(`"${p.name}" added to cart`, 'success');
-}
-
-function removeFromCart(productId) {
-  cart = cart.filter(x => x.id !== productId);
-  updateCartUI();
-  renderCartItems();
-}
-
-function changeQty(productId, delta) {
-  const item = cart.find(x => x.id === productId);
-  if (!item) return;
-  item.qty += delta;
-  if (item.qty <= 0) { removeFromCart(productId); return; }
-  updateCartUI();
-  renderCartItems();
-}
-
-function updateCartUI() {
-  const total = cart.reduce((sum, x) => sum + x.qty, 0);
-  const countEl = document.getElementById('cartCount');
-  countEl.textContent = total;
-  countEl.classList.toggle('visible', total > 0);
-  const amount = cart.reduce((sum, x) => sum + x.price * x.qty, 0);
-  document.getElementById('cartTotal').textContent = '$' + amount.toFixed(2);
-}
-
-function renderCartItems() {
-  const container = document.getElementById('cartItems');
-  if (!cart.length) {
-    container.innerHTML = '<div class="cart-empty">Your cart is empty.</div>';
-    return;
-  }
-  container.innerHTML = cart.map(item => `
-    <div class="cart-item">
-      <div class="cart-item-img">
-        ${item.image ? `<img src="${item.image}" alt="${item.name}" />` : ''}
-      </div>
-      <div class="cart-item-info">
-        <div class="cart-item-name">${item.name}</div>
-        <div class="cart-item-price">$${Number(item.price).toFixed(2)}</div>
-        <div class="cart-item-qty">
-          <button class="qty-btn" onclick="changeQty(${item.id}, -1)">−</button>
-          <span class="qty-num">${item.qty}</span>
-          <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
-        </div>
-      </div>
-      <button class="cart-remove" onclick="removeFromCart(${item.id})">✕</button>
-    </div>
-  `).join('');
-}
-
-function openCart() {
-  renderCartItems();
-  document.getElementById('cartOverlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeCart() {
-  document.getElementById('cartOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-function handleCartOverlayClick(e) {
-  if (e.target === document.getElementById('cartOverlay')) closeCart();
-}
-
-/* ════════════════════════════════════════════════
-   STRIPE CHECKOUT
-═══════════════════════════════════════════════════ */
-async function handleCheckout() {
-  if (!cart.length) { showToast('Your cart is empty.', 'error'); return; }
-
-  const btn = document.getElementById('checkoutBtn');
-  btn.disabled = true;
-  btn.textContent = 'Processing...';
-
-  try {
-    // Call Supabase Edge Function to create Stripe session
-    const response = await fetch(
-      `${SUPABASE_URL}/functions/v1/create-checkout-session`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON}`
-        },
-        body: JSON.stringify({
-          items: cart.map(item => ({
-            name: item.name,
-            price: item.price,
-            qty: item.qty,
-            weight: item.weight || 'under1'
-          })),
-          successUrl: window.location.origin + '?payment=success',
-          cancelUrl: window.location.origin + '?payment=cancelled'
-        })
-      }
-    );
-
-    const data = await response.json();
-
-    if (data.error) throw new Error(data.error);
-
-    // Redirect to Stripe checkout page
-    window.location.href = data.url;
-
-  } catch(e) {
-    console.error('Checkout error:', e);
-    showToast('Checkout failed. Please try again.', 'error');
-    btn.disabled = false;
-    btn.textContent = 'Pay with Stripe';
-  }
-}
-
-
 /* ════════════════════════════════════════════════
    LOCK — prevent pinch zoom & page rotation drift
 ═══════════════════════════════════════════════════ */
@@ -1966,17 +1735,6 @@ function updateDiscountPreview() {
   } else {
     preview.classList.add('hidden');
   }
-}
-
-
-/* Handle Stripe redirect back */
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('payment') === 'success') {
-  setTimeout(() => showToast('Payment successful! Thank you for your order.', 'success'), 500);
-  cart = []; updateCartUI();
-}
-if (urlParams.get('payment') === 'cancelled') {
-  setTimeout(() => showToast('Payment cancelled. Your cart is still saved.', 'error'), 500);
 }
 
 loadSupabaseThenInit();
