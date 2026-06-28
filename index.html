@@ -1284,10 +1284,16 @@
           </div>
         </div>
 
+        <!-- DRAFT BANNER -->
+        <div id="draftBanner" class="hidden" style="background:#fff8e1;border-left:4px solid #f59e0b;padding:12px 16px;margin:12px 16px 0;border-radius:8px;font-size:13px;color:#92400e;display:flex;align-items:center;flex-wrap:wrap;gap:8px"></div>
+
         <!-- PUBLISH -->
         <div style="padding: 0 16px 40px;">
           <button class="btn-publish" id="publishBtn" onclick="publishProduct()">
             Publish to Store
+          </button>
+          <button onclick="saveDraft()" style="width:100%;margin-top:10px;padding:13px;border-radius:12px;border:1.5px solid #e5e7eb;background:white;font-family:var(--font-head);font-size:15px;font-weight:600;color:#6b7280;cursor:pointer">
+            Save as Draft
           </button>
         </div>
 
@@ -1843,6 +1849,7 @@ function populateAdminCategorySelect() {
    ADMIN — TABS
 ═══════════════════════════════════════════════════ */
 function switchTab(tab, el) {
+  if (tab === 'upload') setTimeout(checkForDraft, 100);
   document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('tabUpload').classList.toggle('hidden', tab !== 'upload');
@@ -1917,24 +1924,23 @@ async function publishProduct() {
       for (const file of mediaFiles) {
         btn.textContent = 'Uploading photos…';
         const ext  = file.name.split('.').pop();
-        const path = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const filePath = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { error: uploadErr } = await supabase.storage
           .from('redhotdealz-media')
-          .upload(path, file, { cacheControl: '3600', upsert: true });
+          .upload(filePath, file, { cacheControl: '3600', upsert: true });
         if (uploadErr) {
-          console.error('Photo upload error:', uploadErr);
           showToast(`Photo upload failed: ${uploadErr.message}`, 'error');
           btn.disabled = false; btn.textContent = 'Publish to Store';
           return;
         }
-        const { data: urlData } = supabase.storage.from('redhotdealz-media').getPublicUrl(path);
+        const { data: urlData } = supabase.storage.from('redhotdealz-media').getPublicUrl(filePath);
         mediaUrls.push(urlData.publicUrl);
       }
 
       btn.textContent = 'Saving product…';
 
-      // Save to Supabase — bypass RLS using anon key with public insert policy
-      const { data, error: dbErr } = await supabase.from('products').insert({
+      // Use direct REST API call to bypass any RLS issues
+      const productData = {
         name, brand, category,
         price: parseFloat(price),
         retail_price: retail,
@@ -1946,15 +1952,28 @@ async function publishProduct() {
         weight,
         condition,
         stock
-      }).select();
+      };
 
-      if (dbErr) {
-        console.error('Database error:', dbErr);
-        showToast(`Save failed: ${dbErr.message}`, 'error');
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON,
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(productData)
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        showToast(`Save failed: ${errText}`, 'error');
         btn.disabled = false; btn.textContent = 'Publish to Store';
         return;
       }
 
+      // Clear draft after successful publish
+      localStorage.removeItem('rhd_draft');
       showToast(`"${name}" is now live on your store!`, 'success');
 
     } else {
@@ -2256,6 +2275,72 @@ function showPrivacy() {
 function showTerms() {
   document.getElementById('termsModal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+}
+
+
+/* ════════════════════════════════════════════════
+   DRAFT SAVE / RESTORE
+═══════════════════════════════════════════════════ */
+function saveDraft() {
+  const draft = {
+    category:  document.getElementById('uploadCategory').value,
+    name:      document.getElementById('uploadName').value,
+    brand:     document.getElementById('uploadBrand').value,
+    price:     document.getElementById('uploadPrice').value,
+    retail:    document.getElementById('uploadRetail').value,
+    desc:      document.getElementById('uploadDesc').value,
+    weight:    document.getElementById('uploadWeight') ? document.getElementById('uploadWeight').value : '',
+    condition: document.getElementById('uploadCondition') ? document.getElementById('uploadCondition').value : '',
+    stock:     document.getElementById('uploadStock') ? document.getElementById('uploadStock').value : '1',
+    isHot:     document.getElementById('uploadHotDeal').checked,
+    savedAt:   new Date().toLocaleString()
+  };
+  localStorage.setItem('rhd_draft', JSON.stringify(draft));
+  showToast('Draft saved. You can come back to this anytime.', 'success');
+}
+
+function restoreDraft() {
+  const raw = localStorage.getItem('rhd_draft');
+  if (!raw) return;
+  try {
+    const d = JSON.parse(raw);
+    if (document.getElementById('uploadCategory')) document.getElementById('uploadCategory').value = d.category || '';
+    if (document.getElementById('uploadName')) document.getElementById('uploadName').value = d.name || '';
+    if (document.getElementById('uploadBrand')) document.getElementById('uploadBrand').value = d.brand || '';
+    if (document.getElementById('uploadPrice')) document.getElementById('uploadPrice').value = d.price || '';
+    if (document.getElementById('uploadRetail')) document.getElementById('uploadRetail').value = d.retail || '';
+    if (document.getElementById('uploadDesc')) document.getElementById('uploadDesc').value = d.desc || '';
+    if (document.getElementById('uploadWeight') && d.weight) document.getElementById('uploadWeight').value = d.weight;
+    if (document.getElementById('uploadCondition') && d.condition) document.getElementById('uploadCondition').value = d.condition;
+    if (document.getElementById('uploadStock') && d.stock) document.getElementById('uploadStock').value = d.stock;
+    if (document.getElementById('uploadHotDeal')) document.getElementById('uploadHotDeal').checked = d.isHot || false;
+    updateDiscountPreview();
+    showToast(`Draft restored from ${d.savedAt}`, 'success');
+  } catch(e) {
+    console.error('Draft restore error:', e);
+  }
+}
+
+function checkForDraft() {
+  const raw = localStorage.getItem('rhd_draft');
+  if (!raw) return;
+  try {
+    const d = JSON.parse(raw);
+    if (d.name) {
+      const draftBanner = document.getElementById('draftBanner');
+      if (draftBanner) {
+        draftBanner.innerHTML = `<span>You have an unsaved draft: <strong>${d.name}</strong> — saved ${d.savedAt}</span><button onclick="restoreDraft()" style="margin-left:12px;background:#cc0000;color:white;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px">Restore Draft</button><button onclick="discardDraft()" style="margin-left:8px;background:none;border:1px solid #ccc;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px">Discard</button>`;
+        draftBanner.classList.remove('hidden');
+      }
+    }
+  } catch(e) {}
+}
+
+function discardDraft() {
+  localStorage.removeItem('rhd_draft');
+  const draftBanner = document.getElementById('draftBanner');
+  if (draftBanner) draftBanner.classList.add('hidden');
+  showToast('Draft discarded.', 'success');
 }
 
 /* ════════════════════════════════════════════════
