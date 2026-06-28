@@ -34,7 +34,7 @@
   <rect x="560" y="370" width="580" height="2" fill="rgba(255,255,255,0.15)" rx="1"/>
 
   <!-- Tagline -->
-  <text x="560" y="410" font-family="Arial, sans-serif" font-size="24" fill="rgba(255,255,255,0.8)">Brand New Products — Up to 70% Off Retail</text>
+  <text x="560" y="410" font-family="Arial, sans-serif" font-size="24" fill="rgba(255,255,255,0.8)">Brand New Products — Up to 50% Off Retail</text>
 
   <!-- Trust items -->
   <text x="560" y="460" font-family="Arial, sans-serif" font-size="18" fill="rgba(255,255,255,0.55)">✓  100% Authentic    ✓  Secure Checkout    ✓  USPS Shipping</text>

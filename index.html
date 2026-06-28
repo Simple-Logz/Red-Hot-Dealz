@@ -6,7 +6,7 @@
 <meta charset="UTF-8" />
 <script src="https://js.stripe.com/v3/"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0" />
-<title>RedHotDealz — Brand New Products Up to 80% Off | Overstock Deals</title>
+<title>RedHotDealz — Brand New Products Up to 50% Off | Overstock Deals</title>
   <!-- ═══ SEO META TAGS ═══════════════════════════════════ -->
   <meta name="description" content="RedHotDealz — Brand new overstock products at up to 50% off retail. Phones, TVs, laptops, appliances, fashion and more. Genuine products. USPS shipping. Shop now at redhotdealz.com">
   <meta name="keywords" content="discount store, overstock deals, brand new products cheap, cheap electronics, discount phones, discount laptops, liquidation deals, cheap TVs, discount appliances, RedHotDealz">
@@ -17,7 +17,7 @@
   <!-- ═══ OPEN GRAPH (Facebook, WhatsApp, LinkedIn) ════════ -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://redhotdealz.com">
-  <meta property="og:title" content="RedHotDealz — Brand New Products. Up to 80% Off.">
+  <meta property="og:title" content="RedHotDealz — Brand New Products. Up to 50% Off.">
   <meta property="og:description" content="Genuine brand new products from overstock warehouses. Phones, laptops, TVs, appliances, fashion and more — all at massive discounts. Shop now at RedHotDealz.com">
   <meta property="og:image" content="https://redhotdealz.com/og-image.svg">
   <meta property="og:image:width" content="1200">
@@ -29,7 +29,7 @@
   <!-- ═══ TWITTER CARD ═════════════════════════════════════ -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="https://redhotdealz.com">
-  <meta name="twitter:title" content="RedHotDealz — Brand New Products. Up to 80% Off.">
+  <meta name="twitter:title" content="RedHotDealz — Brand New Products. Up to 50% Off.">
   <meta name="twitter:description" content="Genuine brand new products from overstock warehouses at massive discounts. Shop phones, laptops, TVs, appliances and more.">
   <meta name="twitter:image" content="https://redhotdealz.com/og-image.svg">
 
@@ -41,7 +41,7 @@
     "name": "RedHotDealz",
     "url": "https://redhotdealz.com",
     "logo": "https://redhotdealz.com",
-    "description": "Brand new overstock products at up to 80% off retail prices. Phones, laptops, TVs, appliances, fashion and more.",
+    "description": "Brand new overstock products at up to 50% off retail prices. Phones, laptops, TVs, appliances, fashion and more.",
     "address": {
       "@type": "PostalAddress",
       "addressCountry": "US"
@@ -2071,25 +2071,26 @@ function openModal(id) {
   if (!p) return;
   setURL('product/' + toSlug(p.name));
 
-  // Only count view once per device per product
-  const viewedKey = 'rhd_viewed';
-  let viewed = [];
-  try { viewed = JSON.parse(localStorage.getItem(viewedKey) || '[]'); } catch(e) {}
-  
-  if (!viewed.includes(id)) {
-    viewed.push(id);
-    try { localStorage.setItem(viewedKey, JSON.stringify(viewed)); } catch(e) {}
-    // Increment view count in Supabase
-    fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON,
-        'Authorization': `Bearer ${SUPABASE_ANON}`
-      },
-      body: JSON.stringify({ views: (p.views || 0) + 1 })
-    }).catch(() => {});
-  }
+  // Only count view once per device per product — permanently stored
+  try {
+    const viewedKey = 'rhd_viewed_products';
+    let viewed = [];
+    try { viewed = JSON.parse(localStorage.getItem(viewedKey) || '[]'); } catch(e) {}
+    if (!viewed.includes(id)) {
+      viewed.push(id);
+      localStorage.setItem(viewedKey, JSON.stringify(viewed));
+      // Only NOW increment — first time this device views this product
+      fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + id, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON,
+          'Authorization': 'Bearer ' + SUPABASE_ANON
+        },
+        body: JSON.stringify({ views: (p.views || 0) + 1 })
+      }).catch(() => {});
+    }
+  } catch(e) {}
   const cat = getCatMeta(p.category);
   const discount = p.retail_price ? Math.round((1 - p.price / p.retail_price) * 100) : null;
   const savings = p.retail_price ? (p.retail_price - p.price).toFixed(2) : null;
