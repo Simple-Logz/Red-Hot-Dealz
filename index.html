@@ -1916,7 +1916,12 @@ function removeMedia(idx) {
 ═══════════════════════════════════════════════════ */
 async function publishProduct() {
   // Collect all field values
-  const category  = document.getElementById('uploadCategory').value;
+  let category = document.getElementById('uploadCategory').value;
+  if (category === 'other') {
+    const custom = document.getElementById('customCategoryInput').value.trim().toLowerCase().replace(/\s+/g, '_');
+    if (!custom) { alert('Please enter a custom category name.'); return; }
+    category = custom;
+  }
   const name      = document.getElementById('uploadName').value.trim();
   const brand     = document.getElementById('uploadBrand').value.trim();
   const price     = parseFloat(document.getElementById('uploadPrice').value);
@@ -2029,9 +2034,22 @@ async function publishProduct() {
 /* ════════════════════════════════════════════════
    DRAFT SAVE / RESTORE
 ═══════════════════════════════════════════════════ */
+
+function handleCategoryChange(val) {
+  const wrap = document.getElementById('customCategoryWrap');
+  if (val === 'other') {
+    wrap.classList.remove('hidden');
+    document.getElementById('customCategoryInput').focus();
+  } else {
+    wrap.classList.add('hidden');
+    document.getElementById('customCategoryInput').value = '';
+  }
+}
+
 function saveDraft() {
   const draft = {
     category:  document.getElementById('uploadCategory').value,
+    customCategory: document.getElementById('customCategoryInput') ? document.getElementById('customCategoryInput').value : '',
     name:      document.getElementById('uploadName').value,
     brand:     document.getElementById('uploadBrand').value,
     price:     document.getElementById('uploadPrice').value,
