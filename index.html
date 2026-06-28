@@ -1669,7 +1669,7 @@ function renderGrid(products) {
 async function loadProducts() {
   try {
     // Always try Supabase REST API directly — same approach as publish
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?order=created_at.desc`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?order=sort_order.asc,created_at.desc`, {
       headers: {
         'apikey': SUPABASE_ANON,
         'Authorization': `Bearer ${SUPABASE_ANON}`
@@ -2129,7 +2129,7 @@ async function loadAdminProducts() {
   const list = document.getElementById('adminProductsList');
   list.innerHTML = '<div style="color:#444;text-align:center;padding:40px">Loading…</div>';
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?order=created_at.desc`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?order=sort_order.asc,created_at.desc`, {
       headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
     });
     if (!res.ok) throw new Error(await res.text());
@@ -2410,6 +2410,135 @@ function clearSearch() {
   document.getElementById('searchClear').style.display = 'none';
   searchQuery = '';
   showHomeView();
+}
+
+
+/* ════════════════════════════════════════════════
+   DRAG & DROP PRODUCT REORDER
+═══════════════════════════════════════════════════ */
+let dragSrcEl = null;
+
+function initDragDrop() {
+  // Touch support for mobile
+  const rows = document.querySelectorAll('.admin-product-row[draggable]');
+  rows.forEach(row => {
+    row.addEventListener('touchstart', touchStart, { passive: true });
+    row.addEventListener('touchmove', touchMove, { passive: false });
+    row.addEventListener('touchend', touchEnd);
+  });
+}
+
+function dragStart(e) {
+  dragSrcEl = e.currentTarget;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dragSrcEl.dataset.id);
+  setTimeout(() => dragSrcEl.style.opacity = '0.4', 0);
+}
+
+function dragOver2(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const target = e.currentTarget;
+  if (target !== dragSrcEl) {
+    target.style.borderTop = '3px solid #cc0000';
+  }
+}
+
+function dragEnd(e) {
+  e.currentTarget.style.opacity = '1';
+  document.querySelectorAll('.admin-product-row[draggable]').forEach(r => {
+    r.style.borderTop = '';
+  });
+}
+
+function dragDrop(e) {
+  e.preventDefault();
+  const target = e.currentTarget;
+  target.style.borderTop = '';
+
+  if (dragSrcEl === target) return;
+
+  const list = document.getElementById('adminProductsList');
+  const rows = [...list.querySelectorAll('.admin-product-row[draggable]')];
+  const srcIdx = rows.indexOf(dragSrcEl);
+  const tgtIdx = rows.indexOf(target);
+
+  if (srcIdx < tgtIdx) {
+    list.insertBefore(dragSrcEl, target.nextSibling);
+  } else {
+    list.insertBefore(dragSrcEl, target);
+  }
+
+  dragSrcEl.style.opacity = '1';
+  saveProductOrder();
+}
+
+// Touch drag support
+let touchDragEl = null, touchClone = null, touchStartY = 0;
+
+function touchStart(e) {
+  touchDragEl = e.currentTarget;
+  touchStartY = e.touches[0].clientY;
+  touchDragEl.style.opacity = '0.5';
+}
+
+function touchMove(e) {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  const target = el ? el.closest('.admin-product-row[draggable]') : null;
+  if (target && target !== touchDragEl) {
+    target.style.borderTop = '3px solid #cc0000';
+    document.querySelectorAll('.admin-product-row[draggable]').forEach(r => {
+      if (r !== target) r.style.borderTop = '';
+    });
+  }
+}
+
+function touchEnd(e) {
+  if (!touchDragEl) return;
+  touchDragEl.style.opacity = '1';
+  const touch = e.changedTouches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  const target = el ? el.closest('.admin-product-row[draggable]') : null;
+  document.querySelectorAll('.admin-product-row[draggable]').forEach(r => r.style.borderTop = '');
+
+  if (target && target !== touchDragEl) {
+    const list = document.getElementById('adminProductsList');
+    const rows = [...list.querySelectorAll('.admin-product-row[draggable]')];
+    const srcIdx = rows.indexOf(touchDragEl);
+    const tgtIdx = rows.indexOf(target);
+    if (srcIdx < tgtIdx) {
+      list.insertBefore(touchDragEl, target.nextSibling);
+    } else {
+      list.insertBefore(touchDragEl, target);
+    }
+    saveProductOrder();
+  }
+  touchDragEl = null;
+}
+
+async function saveProductOrder() {
+  const rows = [...document.querySelectorAll('.admin-product-row[draggable]')];
+  const updates = rows.map((row, idx) => ({ id: parseInt(row.dataset.id), sort_order: idx }));
+
+  showToast('Saving order…', 'success');
+
+  // Update each product sort_order
+  for (const u of updates) {
+    await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${u.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`
+      },
+      body: JSON.stringify({ sort_order: u.sort_order })
+    });
+  }
+
+  showToast('Order saved — store updated!', 'success');
+  await loadProducts();
 }
 
 function showAbout() {
