@@ -2146,9 +2146,7 @@ async function loadAdminProducts() {
 }
 
 async function deleteProduct(id, name) {
-  // First confirmation
   if (!confirm(`Are you sure you want to delete "${name}"?\n\nThis cannot be undone.`)) return;
-  // Second confirmation
   if (!confirm(`Final confirmation — permanently delete "${name}" from your store?`)) return;
 
   try {
@@ -2156,28 +2154,30 @@ async function deleteProduct(id, name) {
       method: 'DELETE',
       headers: {
         'apikey': SUPABASE_ANON,
-        'Authorization': `Bearer ${SUPABASE_ANON}`
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Prefer': 'return=minimal'
       }
     });
 
+    const responseText = await res.text();
+
     if (!res.ok) {
-      const err = await res.text();
-      alert('Delete failed: ' + err);
+      alert(`Delete failed!\nStatus: ${res.status}\nError: ${responseText}`);
       return;
     }
 
-    // Remove from UI immediately
+    alert(`"${name}" deleted successfully. Status: ${res.status}`);
+
+    // Remove from UI
     const row = document.getElementById(`row-${id}`);
     if (row) row.remove();
-
-    // Also remove from allProducts array
     allProducts = allProducts.filter(p => p.id !== id);
 
-    showToast(`"${name}" has been permanently deleted.`, 'success');
+    await loadAdminProducts();
     await loadProducts();
 
   } catch(e) {
-    alert('Could not delete product: ' + e.message);
+    alert('Delete error: ' + e.message);
   }
 }
 
