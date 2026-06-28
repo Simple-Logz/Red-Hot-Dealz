@@ -1076,10 +1076,10 @@
 </div>
     <div class="nav-right">
       <!-- Search in nav -->
-      <div style="display:flex;align-items:center;background:#f4f5f7;border:1.5px solid #e5e7eb;border-radius:20px;padding:6px 12px;gap:6px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input id="searchInput" type="text" placeholder="Search…" oninput="handleSearch(this.value)" style="border:none;background:none;font-size:13px;font-family:inherit;color:#111;outline:none;width:120px">
-        <button id="searchClear" onclick="clearSearch()" class="hidden" style="border:none;background:none;color:#aaa;cursor:pointer;font-size:14px;padding:0">✕</button>
+      <div style="display:flex;align-items:center;background:#f4f5f7;border:1.5px solid #e5e7eb;border-radius:20px;padding:7px 14px;gap:8px;flex:1;max-width:280px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input id="searchInput" type="text" placeholder="Search products…" oninput="handleSearch(this.value)" onkeydown="if(event.key==='Escape'){clearSearch()}" style="border:none;background:none;font-size:13px;font-family:inherit;color:#111;outline:none;width:100%;min-width:0">
+        <button id="searchClear" onclick="clearSearch()" style="display:none;border:none;background:none;color:#aaa;cursor:pointer;font-size:16px;padding:0;flex-shrink:0">✕</button>
       </div>
       <!-- Cart button -->
       <button class="cart-btn" onclick="openCart()" aria-label="Cart">
@@ -1199,16 +1199,7 @@
   </div><!-- /trust-row -->
   </div><!-- /sticky-header -->
 
-  <!-- SEARCH -->
-  <div class="search-wrap">
-    <div class="search-input-wrap">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-      </svg>
-      <input class="search-input" id="searchInput" type="text" placeholder="Search products…" oninput="handleSearch(this.value)" />
-      <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none">✕</button>
-    </div>
-  </div>
+  
 
   <!-- PRODUCTS -->
   <section class="products-section">
@@ -3050,7 +3041,10 @@ let searchQuery = '';
 
 function handleSearch(q) {
   searchQuery = q.toLowerCase().trim();
-  if (searchQuery) { setURL("search/" + encodeURIComponent(q)); document.title = "Search: " + q + " | RedHotDealz"; } else { setURL(""); }
+  // Show/hide clear button
+  const clearBtn = document.getElementById('searchClear');
+  if (clearBtn) clearBtn.style.display = searchQuery ? 'block' : 'none';
+  if (searchQuery) { setURL("search/" + encodeURIComponent(q)); document.title = "Search: " + q + " | RedHotDealz"; } else { setURL(""); document.title = "RedHotDealz — Brand New Products. Up to 50% Off."; }
   applyFilters();
   document.getElementById('searchClear').style.display = q ? 'block' : 'none';
   if (!searchQuery) { showHomeView(); return; }
@@ -3497,7 +3491,7 @@ function applyFilters() {
   const condition = document.getElementById('filterCondition').value;
   const minPrice  = parseFloat(document.getElementById('filterMinPrice').value) || 0;
   const maxPrice  = parseFloat(document.getElementById('filterMaxPrice').value) || Infinity;
-  const search    = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  const search    = searchQuery || (document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase().trim() : '');
 
   let pool = activeCategory === 'all'
     ? allProducts.filter(p => !p._hideFromStore)
