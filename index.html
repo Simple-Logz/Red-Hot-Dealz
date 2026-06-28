@@ -2007,10 +2007,131 @@ function openModal(id) {
         <button class="btn-add-cart" style="margin-bottom:10px" onclick="addToCart(${p.id});closeModal()">Add to Cart</button>
         <button class="btn-order" onclick="submitOrder(${p.id})">Order Now — $${Number(p.price).toFixed(2)}</button>
       </div>
+
+      <!-- REVIEWS SECTION inside modal -->
+      <div class="modal-divider"></div>
+      <div style="margin-top:4px">
+        <div style="font-family:var(--font-head);font-size:16px;font-weight:800;margin-bottom:16px">
+          Customer Reviews
+          ${p.review_count > 0 ? `<span style="font-size:13px;font-weight:600;color:#f59e0b;margin-left:8px">★ ${Number(p.avg_rating).toFixed(1)} · ${p.review_count} review${p.review_count > 1 ? 's' : ''}</span>` : ''}
+        </div>
+        <div id="inlineReviews" style="margin-bottom:20px">
+          <div style="color:#aaa;font-size:13px;text-align:center;padding:16px">Loading reviews…</div>
+        </div>
+        <!-- Write a review -->
+        <div style="background:#fafafa;border-radius:12px;padding:16px;border:1.5px solid #f0f0f0">
+          <div style="font-weight:700;font-size:14px;margin-bottom:10px">Write a Review</div>
+          <div class="star-picker" id="inlineStarPicker">
+            <span onclick="setInlineStar(1)">★</span>
+            <span onclick="setInlineStar(2)">★</span>
+            <span onclick="setInlineStar(3)">★</span>
+            <span onclick="setInlineStar(4)">★</span>
+            <span onclick="setInlineStar(5)">★</span>
+          </div>
+          <input class="review-name-input" id="inlineReviewName" type="text" placeholder="Your name" maxlength="50" />
+          <textarea class="review-textarea" id="inlineReviewText" placeholder="Share your experience…" maxlength="500"></textarea>
+          <button class="btn-submit-review" onclick="submitInlineReview(${p.id})">Post Review</button>
+        </div>
+      </div>
     </div>`;
 
   document.getElementById('productModal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+
+  // Load reviews inline
+  loadInlineReviews(id);
+}
+
+let inlineStarRating = 0;
+let inlineProductId = null;
+
+function setInlineStar(val) {
+  inlineStarRating = val;
+  document.querySelectorAll('#inlineStarPicker span').forEach((el, i) => {
+    el.classList.toggle('active', i < val);
+  });
+}
+
+async function loadInlineReviews(productId) {
+  inlineProductId = productId;
+  inlineStarRating = 0;
+  const container = document.getElementById('inlineReviews');
+  if (!container) return;
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?product_id=eq.${productId}&order=created_at.desc`, {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+    });
+    if (!res.ok) throw new Error();
+    const reviews = await res.json();
+
+    if (!reviews.length) {
+      container.innerHTML = '<div style="color:#aaa;font-size:13px;text-align:center;padding:16px">No reviews yet — be the first!</div>';
+      return;
+    }
+
+    container.innerHTML = reviews.map(r => `
+      <div style="padding:12px 0;border-bottom:1px solid #f0f0f0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <span style="font-weight:700;font-size:14px">${r.author_name || 'Anonymous'}</span>
+          <span style="color:#f59e0b;font-size:14px">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-bottom:4px">${new Date(r.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div>
+        ${r.review_text ? `<div style="font-size:13px;color:#444;line-height:1.6">${r.review_text}</div>` : ''}
+      </div>
+    `).join('');
+  } catch(e) {
+    if (container) container.innerHTML = '<div style="color:#aaa;font-size:13px;text-align:center;padding:16px">Could not load reviews.</div>';
+  }
+}
+
+async function submitInlineReview(productId) {
+  if (!inlineStarRating) { alert('Please select a star rating first.'); return; }
+  const name = document.getElementById('inlineReviewName').value.trim();
+  const text = document.getElementById('inlineReviewText').value.trim();
+  if (!name) { alert('Please enter your name.'); return; }
+
+  const btn = document.querySelector('#modalContent .btn-submit-review');
+  if (btn) { btn.disabled = true; btn.textContent = 'Posting…'; }
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ product_id: productId, author_name: name, rating: inlineStarRating, review_text: text })
+    });
+
+    if (!res.ok) { alert('Could not post review: ' + await res.text()); return; }
+
+    // Update avg_rating
+    const allRes = await fetch(`${SUPABASE_URL}/rest/v1/reviews?product_id=eq.${productId}`, {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+    });
+    const allReviews = await allRes.json();
+    const avg = allReviews.reduce((s,r) => s + r.rating, 0) / allReviews.length;
+    await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${productId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` },
+      body: JSON.stringify({ avg_rating: parseFloat(avg.toFixed(1)), review_count: allReviews.length })
+    });
+
+    document.getElementById('inlineReviewName').value = '';
+    document.getElementById('inlineReviewText').value = '';
+    setInlineStar(0);
+    showToast('Review posted — thank you!', 'success');
+    loadInlineReviews(productId);
+    loadProducts();
+
+  } catch(e) {
+    alert('Error: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Post Review'; }
+  }
 }
 
 function closeModal() {
@@ -2745,6 +2866,9 @@ async function handleCheckout() {
 
     if (data.error) throw new Error(data.error);
 
+    // Save cart for post-payment review prompt
+    localStorage.setItem('rhd_last_cart', JSON.stringify(cart.map(i => ({id: i.id, name: i.name}))));
+
     // Redirect to Stripe checkout page
     window.location.href = data.url;
 
@@ -3243,6 +3367,23 @@ const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('payment') === 'success') {
   setTimeout(() => showToast('Payment successful! Thank you for your order.', 'success'), 500);
   cart = []; updateCartUI();
+  // Prompt for review after 3 seconds
+  setTimeout(() => {
+    const lastCart = JSON.parse(localStorage.getItem('rhd_last_cart') || '[]');
+    if (lastCart.length > 0) {
+      const item = lastCart[0];
+      if (confirm(`🎉 Thank you for your order!\n\nWould you like to leave a review for:\n"${item.name}"?\n\nYour feedback helps other buyers.`)) {
+        setTimeout(() => {
+          openModal(item.id);
+          setTimeout(() => {
+            const el = document.getElementById('inlineReviewName');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 600);
+        }, 300);
+      }
+    }
+    localStorage.removeItem('rhd_last_cart');
+  }, 3000);
 }
 if (urlParams.get('payment') === 'cancelled') {
   setTimeout(() => showToast('Payment cancelled. Your cart is still saved.', 'error'), 500);
