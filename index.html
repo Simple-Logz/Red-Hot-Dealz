@@ -1106,6 +1106,122 @@
   }
   .ticker-highlight { color: #ffcc00; }
 
+
+
+
+  /* ─── EMAIL POPUP ────────────────────────────────── */
+  .email-popup-overlay {
+    position:fixed; inset:0; z-index:600;
+    background:rgba(0,0,0,0.5); backdrop-filter:blur(4px);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .email-popup {
+    background:white; border-radius:20px;
+    max-width:420px; width:100%;
+    padding:32px 28px; text-align:center;
+    box-shadow:0 24px 60px rgba(0,0,0,0.3);
+    position:relative;
+    animation: scaleIn .25s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .email-popup-close {
+    position:absolute; top:12px; right:12px;
+    width:32px; height:32px; border-radius:50%;
+    background:#f4f5f7; border:none; cursor:pointer;
+    font-size:16px; display:flex; align-items:center; justify-content:center;
+  }
+  .email-popup input {
+    width:100%; padding:13px 16px; border:1.5px solid #e5e7eb;
+    border-radius:10px; font-size:15px; font-family:inherit;
+    outline:none; margin:12px 0;
+  }
+  .email-popup input:focus { border-color:#cc0000; }
+  .btn-email-submit {
+    width:100%; padding:14px; background:#cc0000; color:white;
+    border:none; border-radius:10px; font-family:var(--font-head);
+    font-size:15px; font-weight:700; cursor:pointer;
+  }
+  .btn-email-submit:hover { background:#b91c1c; }
+
+  /* ─── WHATSAPP BTN ───────────────────────────────── */
+  .btn-whatsapp {
+    width:100%; padding:13px; margin-top:8px;
+    background:#25d366; color:white; border:none;
+    border-radius:12px; font-family:var(--font-head);
+    font-size:15px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:background .15s;
+  }
+  .btn-whatsapp:hover { background:#20b858; }
+
+  /* ─── RECENTLY VIEWED ────────────────────────────── */
+  .recently-viewed {
+    padding:24px 16px; background:#fafafa;
+    border-top:1px solid #f0f0f0;
+  }
+  .recently-viewed-title {
+    font-family:var(--font-head); font-size:16px; font-weight:800;
+    margin-bottom:14px; color:#111;
+  }
+  .recently-viewed-grid {
+    display:flex; gap:12px; overflow-x:auto;
+    padding-bottom:8px; scrollbar-width:none;
+  }
+  .recently-viewed-grid::-webkit-scrollbar { display:none; }
+  .rv-card {
+    flex-shrink:0; width:120px; cursor:pointer;
+    border:1.5px solid #f0f0f0; border-radius:10px;
+    overflow:hidden; background:white;
+    transition:box-shadow .15s;
+  }
+  .rv-card:hover { box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+  .rv-card img { width:100%; height:80px; object-fit:cover; }
+  .rv-card-info { padding:6px 8px; }
+  .rv-card-name { font-size:11px; font-weight:600; color:#111; line-height:1.3; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .rv-card-price { font-size:12px; font-weight:900; color:#cc0000; margin-top:3px; }
+
+  /* ─── PHOTO GALLERY ──────────────────────────────── */
+  .modal-gallery {
+    position:relative; overflow:hidden; border-radius:12px;
+    background:#f4f5f7; margin-bottom:16px;
+  }
+  .modal-gallery-track {
+    display:flex; transition:transform .3s cubic-bezier(0.32,0.72,0,1);
+  }
+  .modal-gallery-track img, .modal-gallery-track video {
+    flex-shrink:0; width:100%; height:260px; object-fit:cover;
+  }
+  .gallery-btn {
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:36px; height:36px; border-radius:50%;
+    background:rgba(255,255,255,0.9); border:none; cursor:pointer;
+    font-size:16px; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 2px 8px rgba(0,0,0,0.15); z-index:2;
+  }
+  .gallery-btn.prev { left:8px; }
+  .gallery-btn.next { right:8px; }
+  .gallery-dots {
+    position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
+    display:flex; gap:5px;
+  }
+  .gallery-dot {
+    width:6px; height:6px; border-radius:50%;
+    background:rgba(255,255,255,0.5); transition:background .2s;
+    cursor:pointer;
+  }
+  .gallery-dot.active { background:white; }
+  .modal-thumbs {
+    display:flex; gap:6px; margin-bottom:12px; overflow-x:auto;
+    scrollbar-width:none;
+  }
+  .modal-thumbs::-webkit-scrollbar { display:none; }
+  .modal-thumb {
+    flex-shrink:0; width:52px; height:52px; border-radius:6px;
+    object-fit:cover; border:2px solid transparent; cursor:pointer;
+    transition:border-color .15s;
+  }
+  .modal-thumb.active { border-color:#cc0000; }
+
   /* ─── FOOTER ──────────────────────────────────────────── */
   footer {
     background: var(--ink); color: #666;
@@ -1309,6 +1425,13 @@
       <button class="page-btn page-btn-next" id="btnNext" onclick="showHomeView(currentPage + 1)">Next &#8594;</button>
     </div>
   </section>
+
+
+  <!-- RECENTLY VIEWED -->
+  <div class="recently-viewed hidden" id="recentlyViewedSection">
+    <div class="recently-viewed-title">Recently Viewed</div>
+    <div class="recently-viewed-grid" id="recentlyViewedGrid"></div>
+  </div>
 
   <!-- FOOTER -->
   <footer>
@@ -1823,6 +1946,21 @@
   </div>
 </div>
 
+
+<!-- EMAIL CAPTURE POPUP -->
+<div class="email-popup-overlay hidden" id="emailPopup">
+  <div class="email-popup">
+    <button class="email-popup-close" onclick="closeEmailPopup()">✕</button>
+    <div style="font-size:40px;margin-bottom:8px">🔥</div>
+    <div style="font-family:var(--font-head);font-size:22px;font-weight:900;color:#111;margin-bottom:6px">Get Exclusive Deals First</div>
+    <div style="font-size:14px;color:#666;margin-bottom:4px">Subscribe and be the first to know when new products drop.</div>
+    <div style="font-size:12px;color:#aaa;margin-bottom:8px">No spam. Unsubscribe anytime.</div>
+    <input type="email" id="emailInput" placeholder="Your email address" />
+    <button class="btn-email-submit" onclick="submitEmail()">Get Early Access →</button>
+    <div style="font-size:11px;color:#aaa;margin-top:10px">Join 100+ smart shoppers already subscribed</div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast hidden" id="toast"></div>
 
@@ -2293,10 +2431,20 @@ function openModal(id) {
         <div class="form-field"><label>Notes (optional)</label><textarea id="oNotes" placeholder="Any special requests…" style="min-height:60px"></textarea></div>
         <button class="btn-add-cart" style="margin-bottom:10px" onclick="addToCart(${p.id});closeModal()">Add to Cart</button>
         <button class="btn-order" onclick="submitOrder(${p.id})">Order Now — $${Number(p.price).toFixed(2)}</button>
-        <button onclick="shareProduct('${toSlug(p.name)}')" style="width:100%;margin-top:10px;padding:12px;border:1.5px solid #e5e7eb;border-radius:12px;background:white;font-family:var(--font-head);font-size:14px;font-weight:600;color:#555;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-          Share this product
-        </button>
+        <a class="btn-whatsapp" href="https://wa.me/14014402434?text=Hi!%20I%20want%20to%20buy%20${encodeURIComponent(p.name)}%20for%20%24${Number(p.price).toFixed(2)}" target="_blank">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2C6.477 2 2 6.477 2 12c0 1.989.547 3.851 1.497 5.449L2 22l4.741-1.46A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>
+          Buy via WhatsApp
+        </a>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+          <button onclick="shareProduct('${toSlug(p.name)}')" style="padding:11px;border:1.5px solid #e5e7eb;border-radius:10px;background:white;font-size:13px;font-weight:600;color:#555;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Share Post
+          </button>
+          <a href="${p.media_urls && p.media_urls[0] ? p.media_urls[0] : '#'}" download target="_blank" style="padding:11px;border:1.5px solid #e5e7eb;border-radius:10px;background:white;font-size:13px;font-weight:600;color:#555;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Save Photo
+          </a>
+        </div>
       </div>
 
       <!-- REVIEWS SECTION inside modal -->
@@ -2334,6 +2482,7 @@ function openModal(id) {
 
   // Load reviews inline
   loadInlineReviews(id);
+  galleryIndex = 0;
   // Load recommendations
   const recoSection = document.getElementById('modalRecoSection');
   if (recoSection) recoSection.innerHTML = renderRecommendations(p);
@@ -3876,20 +4025,144 @@ function renderRecommendations(product) {
 }
 
 function shareProduct(slug) {
-  const shareUrl = 'https://redhotdealz.com/api/og?product=' + slug;
+  const p = allProducts.find(x => toSlug(x.name) === slug);
+  if (!p) return;
+
+  const price = Number(p.price).toFixed(2);
+  const retail = p.retail_price ? Number(p.retail_price).toFixed(2) : null;
+  const discount = retail ? Math.round((1 - p.price / p.retail_price) * 100) : 0;
+
+  const text = `🔥 ${p.name}\n\n` +
+    (discount ? `Was $${retail} → Now only $${price} (${discount}% OFF!)\n\n` : `Only $${price}\n\n`) +
+    `✓ Brand new\n✓ Fast USPS shipping\n✓ Secure checkout\n\n` +
+    `Shop now → https://redhotdealz.com`;
+
   if (navigator.share) {
     navigator.share({
-      title: document.title,
-      url: shareUrl
+      title: p.name + ' — RedHotDealz',
+      text: text,
+      url: 'https://redhotdealz.com'
     });
   } else {
-    navigator.clipboard.writeText(shareUrl).then(() => {
-      showToast('Link copied! Paste on Facebook, WhatsApp or Instagram.', 'success');
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('Post copied! Paste it on Facebook or Instagram with the product photo.', 'success');
     }).catch(() => {
-      prompt('Copy this shareable link:', shareUrl);
+      prompt('Copy this post:', text);
     });
   }
 }
+
+
+/* ════════════════════════════════════════════════
+   PHOTO GALLERY
+═══════════════════════════════════════════════════ */
+let galleryIndex = 0;
+
+function galleryGo(idx) {
+  galleryIndex = idx;
+  const track = document.getElementById('galleryTrack');
+  if (!track) return;
+  track.style.transform = `translateX(-${idx * 100}%)`;
+  document.querySelectorAll('.gallery-dot').forEach((d,i) => d.classList.toggle('active', i === idx));
+  document.querySelectorAll('.modal-thumb').forEach((t,i) => t.classList.toggle('active', i === idx));
+}
+
+function galleryPrev() {
+  const dots = document.querySelectorAll('.gallery-dot');
+  galleryGo(galleryIndex > 0 ? galleryIndex - 1 : dots.length - 1);
+}
+
+function galleryNext() {
+  const dots = document.querySelectorAll('.gallery-dot');
+  galleryGo(galleryIndex < dots.length - 1 ? galleryIndex + 1 : 0);
+}
+
+/* ════════════════════════════════════════════════
+   RECENTLY VIEWED
+═══════════════════════════════════════════════════ */
+const MAX_RECENT = 6;
+
+function addToRecentlyViewed(product) {
+  try {
+    let recent = JSON.parse(localStorage.getItem('rhd_recent') || '[]');
+    recent = recent.filter(id => id !== product.id);
+    recent.unshift(product.id);
+    recent = recent.slice(0, MAX_RECENT);
+    localStorage.setItem('rhd_recent', JSON.stringify(recent));
+    renderRecentlyViewed();
+  } catch(e) {}
+}
+
+function renderRecentlyViewed() {
+  try {
+    const ids = JSON.parse(localStorage.getItem('rhd_recent') || '[]');
+    const products = ids.map(id => allProducts.find(p => p.id === id)).filter(Boolean);
+    const section = document.getElementById('recentlyViewedSection');
+    const grid = document.getElementById('recentlyViewedGrid');
+    if (!section || !grid || products.length < 2) {
+      if (section) section.classList.add('hidden');
+      return;
+    }
+    section.classList.remove('hidden');
+    grid.innerHTML = products.map(p => `
+      <div class="rv-card" onclick="openModal(${p.id})">
+        ${p.media_urls && p.media_urls[0]
+          ? `<img src="${p.media_urls[0]}" alt="${p.name}" loading="lazy">`
+          : `<div style="height:80px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:20px">📦</div>`}
+        <div class="rv-card-info">
+          <div class="rv-card-name">${p.name}</div>
+          <div class="rv-card-price">$${Number(p.price).toFixed(2)}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {}
+}
+
+/* ════════════════════════════════════════════════
+   EMAIL CAPTURE POPUP
+═══════════════════════════════════════════════════ */
+function showEmailPopup() {
+  const dismissed = localStorage.getItem('rhd_email_dismissed');
+  const subscribed = localStorage.getItem('rhd_email_subscribed');
+  if (dismissed || subscribed) return;
+  document.getElementById('emailPopup').classList.remove('hidden');
+}
+
+function closeEmailPopup() {
+  document.getElementById('emailPopup').classList.add('hidden');
+  localStorage.setItem('rhd_email_dismissed', '1');
+}
+
+async function submitEmail() {
+  const email = document.getElementById('emailInput').value.trim();
+  if (!email || !email.includes('@')) {
+    alert('Please enter a valid email address.');
+    return;
+  }
+  // Save to Supabase
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/email_subscribers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': 'Bearer ' + SUPABASE_ANON,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ email: email, subscribed_at: new Date().toISOString() })
+    });
+  } catch(e) {}
+  localStorage.setItem('rhd_email_subscribed', email);
+  document.getElementById('emailPopup').classList.add('hidden');
+  showToast('You are subscribed! We will notify you of new deals.', 'success');
+}
+
+// Show email popup after 30 seconds
+setTimeout(showEmailPopup, 30000);
+
+// Render recently viewed on load
+setTimeout(renderRecentlyViewed, 1000);
+
 
 function showAbout() {
   document.getElementById('aboutModal').classList.remove('hidden');
