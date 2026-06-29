@@ -3751,12 +3751,15 @@ function renderRecommendations(product) {
 function shareProduct(slug) {
   const shareUrl = 'https://redhotdealz.com/api/og?product=' + slug;
   if (navigator.share) {
-    navigator.share({ url: shareUrl });
+    navigator.share({
+      title: document.title,
+      url: shareUrl
+    });
   } else {
     navigator.clipboard.writeText(shareUrl).then(() => {
-      showToast('Product link copied! Paste it on Facebook, Instagram or WhatsApp.', 'success');
+      showToast('Link copied! Paste on Facebook, WhatsApp or Instagram.', 'success');
     }).catch(() => {
-      prompt('Copy this link to share:', shareUrl);
+      prompt('Copy this shareable link:', shareUrl);
     });
   }
 }
