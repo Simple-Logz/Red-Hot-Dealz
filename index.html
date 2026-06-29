@@ -2163,6 +2163,9 @@ function openModal(id) {
         <div id="inlineReviews" style="margin-bottom:20px">
           <div style="color:#aaa;font-size:13px;text-align:center;padding:16px">Loading reviews…</div>
         </div>
+        <!-- Recommendations -->
+        <div id="modalRecoSection"></div>
+        <div class="modal-divider" style="margin:20px 0"></div>
         <!-- Write a review -->
         <div style="background:#fafafa;border-radius:12px;padding:16px;border:1.5px solid #f0f0f0">
           <div style="font-weight:700;font-size:14px;margin-bottom:10px">Write a Review</div>
@@ -2185,6 +2188,9 @@ function openModal(id) {
 
   // Load reviews inline
   loadInlineReviews(id);
+  // Load recommendations
+  const recoSection = document.getElementById('modalRecoSection');
+  if (recoSection) recoSection.innerHTML = renderRecommendations(p);
 }
 
 let inlineStarRating = 0;
@@ -3548,6 +3554,89 @@ function clearFilters() {
   const countEl = document.getElementById('filterResultCount');
   if (countEl) countEl.textContent = '';
   applyFilters();
+}
+
+
+/* ════════════════════════════════════════════════
+   SMART RECOMMENDATIONS
+═══════════════════════════════════════════════════ */
+const COMPLEMENTARY_CATS = {
+  'pet':        ['health', 'kids', 'home'],
+  'health':     ['sports', 'beauty', 'home', 'pet'],
+  'sports':     ['health', 'beauty', 'home'],
+  'technology': ['phones', 'home'],
+  'phones':     ['technology', 'luxury'],
+  'beauty':     ['health', 'fashion', 'luxury'],
+  'fashion':    ['luxury', 'beauty'],
+  'luxury':     ['fashion', 'beauty', 'phones'],
+  'home':       ['kitchen', 'health', 'sports'],
+  'kitchen':    ['home', 'health'],
+  'kids':       ['home', 'pet', 'sports'],
+};
+
+function getRecommendations(currentProduct, max) {
+  max = max || 4;
+  const allAvail = allProducts.filter(p => !p._hideFromStore && !p.sold && p.id !== currentProduct.id);
+  if (!allAvail.length) return [];
+
+  const cat = currentProduct.category;
+  const related = [];
+  const used = new Set();
+
+  // 1. Same category first
+  allAvail.filter(p => p.category === cat).forEach(p => {
+    if (used.size < max) { used.add(p.id); related.push(p); }
+  });
+
+  // 2. Complementary categories
+  const compCats = COMPLEMENTARY_CATS[cat] || [];
+  for (const cc of compCats) {
+    allAvail.filter(p => p.category === cc && !used.has(p.id)).forEach(p => {
+      if (used.size < max) { used.add(p.id); related.push(p); }
+    });
+    if (used.size >= max) break;
+  }
+
+  // 3. Fill with anything else
+  allAvail.filter(p => !used.has(p.id)).forEach(p => {
+    if (used.size < max) { used.add(p.id); related.push(p); }
+  });
+
+  // Shuffle for variety
+  return related.sort(() => Math.random() - 0.5).slice(0, max);
+}
+
+function renderRecommendations(product) {
+  const recos = getRecommendations(product, 4);
+  if (!recos.length) return '';
+
+  return `
+    <div style="margin-top:24px">
+      <div style="font-family:var(--font-head);font-size:15px;font-weight:800;margin-bottom:14px;color:#111">
+        You might also like
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+        ${recos.map(p => {
+          const img = p.media_urls && p.media_urls[0]
+            ? `<img src="${p.media_urls[0]}" style="width:100%;height:80px;object-fit:cover;border-radius:8px 8px 0 0" loading="lazy">`
+            : `<div style="height:80px;background:#f4f5f7;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:center;font-size:24px">📦</div>`;
+          const discount = p.retail_price && p.retail_price > p.price
+            ? Math.round((1 - p.price / p.retail_price) * 100) : 0;
+          return `<div onclick="closeModal();setTimeout(()=>openModal(${p.id}),150)"
+            style="border:1.5px solid #f0f0f0;border-radius:10px;overflow:hidden;cursor:pointer;transition:box-shadow .15s;background:white"
+            onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'"
+            onmouseout="this.style.boxShadow='none'">
+            <div style="position:relative">${img}${discount ? `<div style="position:absolute;top:6px;left:6px;background:#cc0000;color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px">-${discount}%</div>` : ''}</div>
+            <div style="padding:8px">
+              <div style="font-size:11px;color:#888;margin-bottom:2px;text-transform:uppercase;letter-spacing:.5px">${(p.category||'').replace(/_/g,' ')}</div>
+              <div style="font-size:12px;font-weight:700;color:#111;line-height:1.3;margin-bottom:4px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${p.name}</div>
+              <div style="font-size:13px;font-weight:900;color:#cc0000">$${Number(p.price).toFixed(2)}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
 }
 
 function showAbout() {
