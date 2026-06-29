@@ -3041,23 +3041,30 @@ let searchQuery = '';
 
 function handleSearch(q) {
   searchQuery = q.toLowerCase().trim();
-  // Show/hide clear button
   const clearBtn = document.getElementById('searchClear');
   if (clearBtn) clearBtn.style.display = searchQuery ? 'block' : 'none';
-  if (searchQuery) { setURL("search/" + encodeURIComponent(q)); document.title = "Search: " + q + " | RedHotDealz"; } else { setURL(""); document.title = "RedHotDealz — Brand New Products. Up to 50% Off."; }
-  applyFilters();
-  document.getElementById('searchClear').style.display = q ? 'block' : 'none';
-  if (!searchQuery) { showHomeView(); return; }
+
+  if (!searchQuery) {
+    setURL('');
+    document.title = 'RedHotDealz — Brand New Products. Up to 50% Off.';
+    showHomeView();
+    return;
+  }
+
+  setURL('search/' + encodeURIComponent(q));
+  document.title = 'Search: ' + q + ' | RedHotDealz';
+
   const results = allProducts.filter(p =>
-    !p.sold && (
-      p.name.toLowerCase().includes(searchQuery) ||
-      p.category.toLowerCase().includes(searchQuery) ||
-      (p.brand && p.brand.toLowerCase().includes(searchQuery)) ||
-      (p.description && p.description.toLowerCase().includes(searchQuery))
+    !p._hideFromStore && (
+      (p.name||'').toLowerCase().includes(searchQuery) ||
+      (p.category||'').toLowerCase().includes(searchQuery) ||
+      (p.brand||'').toLowerCase().includes(searchQuery) ||
+      (p.description||'').toLowerCase().includes(searchQuery)
     )
   );
-  document.getElementById('sectionTitle').textContent = `Results for "${q}"`;
-  document.getElementById('sectionCount').textContent = '';
+
+  document.getElementById('sectionTitle').textContent = 'Results for "' + q + '"';
+  document.getElementById('sectionCount').textContent = results.length + ' item' + (results.length !== 1 ? 's' : '');
   document.getElementById('backToHome').classList.remove('hidden');
   document.getElementById('viewAllWrap').classList.add('hidden');
   document.getElementById('paginationWrap').classList.add('hidden');
@@ -3527,6 +3534,8 @@ function applyFilters() {
   const countEl = document.getElementById('filterResultCount');
   if (countEl) countEl.textContent = pool.length + ' item' + (pool.length !== 1 ? 's' : '');
 
+  document.getElementById('sectionTitle').textContent = searchQuery ? 'Results for "' + document.getElementById('searchInput').value + '"' : (activeCategory === 'all' ? 'Latest Deals' : '');
+  document.getElementById('sectionCount').textContent = pool.length + ' item' + (pool.length !== 1 ? 's' : '');
   renderGrid(pool);
 }
 
