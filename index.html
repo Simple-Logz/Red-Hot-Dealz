@@ -1650,6 +1650,26 @@
             <div class="admin-step-title">Add Photos or Videos</div>
           </div>
           <div class="admin-step-body">
+            <!-- Photo checklist -->
+            <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:14px;margin-bottom:14px">
+              <div style="font-weight:700;font-size:13px;color:#92400e;margin-bottom:10px">📸 Photo Checklist — upload all 3 for best results:</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                  <input type="checkbox" id="photoCheck1" onchange="updatePhotoChecklist()" style="width:16px;height:16px;accent-color:#cc0000">
+                  <div><div style="font-size:13px;font-weight:600;color:#111">Front view</div><div style="font-size:11px;color:#888">Clear shot of the product face-on</div></div>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                  <input type="checkbox" id="photoCheck2" onchange="updatePhotoChecklist()" style="width:16px;height:16px;accent-color:#cc0000">
+                  <div><div style="font-size:13px;font-weight:600;color:#111">Back / side view</div><div style="font-size:11px;color:#888">Show all angles so buyers feel confident</div></div>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                  <input type="checkbox" id="photoCheck3" onchange="updatePhotoChecklist()" style="width:16px;height:16px;accent-color:#cc0000">
+                  <div><div style="font-size:13px;font-weight:600;color:#111">Close-up / detail shot</div><div style="font-size:11px;color:#888">Brand label, key feature, or condition</div></div>
+                </label>
+              </div>
+              <div id="photoChecklistStatus" style="margin-top:10px;font-size:12px;font-weight:600;color:#d97706">⚠ 0 of 3 — more photos = more sales</div>
+            </div>
+
             <div class="media-zone" id="mediaZone" onclick="document.getElementById('mediaInput').click()">
               <div class="media-zone-icon-text">TAP TO UPLOAD</div>
               <div class="media-zone-sub">Photos or videos — JPG, PNG, MP4, MOV</div>
@@ -2860,6 +2880,8 @@ async function publishProduct() {
     document.getElementById('uploadDesc').value = '';
     document.getElementById('uploadHotDeal').checked = false;
   if (document.getElementById('uploadColor')) document.getElementById('uploadColor').value = '';
+  ['photoCheck1','photoCheck2','photoCheck3'].forEach(id => { const el = document.getElementById(id); if(el) el.checked = false; });
+  updatePhotoChecklist();
     document.getElementById('mediaPreviewGrid').innerHTML = '';
     mediaFiles = [];
 
@@ -2963,6 +2985,8 @@ function resetUploadForm() {
   document.getElementById('uploadDesc').value = '';
   document.getElementById('uploadHotDeal').checked = false;
   if (document.getElementById('uploadColor')) document.getElementById('uploadColor').value = '';
+  ['photoCheck1','photoCheck2','photoCheck3'].forEach(id => { const el = document.getElementById(id); if(el) el.checked = false; });
+  updatePhotoChecklist();
   document.getElementById('mediaPreviewGrid').innerHTML = '';
   mediaFiles = [];
 }
@@ -4163,6 +4187,29 @@ setTimeout(showEmailPopup, 30000);
 // Render recently viewed on load
 setTimeout(renderRecentlyViewed, 1000);
 
+
+
+/* ════════════════════════════════════════════════
+   PHOTO CHECKLIST
+═══════════════════════════════════════════════════ */
+function updatePhotoChecklist() {
+  const c1 = document.getElementById('photoCheck1');
+  const c2 = document.getElementById('photoCheck2');
+  const c3 = document.getElementById('photoCheck3');
+  const status = document.getElementById('photoChecklistStatus');
+  if (!c1 || !status) return;
+
+  const checked = [c1, c2, c3].filter(c => c.checked).length;
+  const messages = [
+    { text: '⚠ 0 of 3 completed — more photos = more sales', color: '#d97706' },
+    { text: '👍 1 of 3 — add a back view and detail shot', color: '#d97706' },
+    { text: '✓ 2 of 3 — one more photo and you're set!', color: '#2563eb' },
+    { text: '🔥 All 3 done — your listing will stand out!', color: '#16a34a' },
+  ];
+  const msg = messages[checked];
+  status.textContent = msg.text;
+  status.style.color = msg.color;
+}
 
 function showAbout() {
   document.getElementById('aboutModal').classList.remove('hidden');
