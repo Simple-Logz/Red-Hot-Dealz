@@ -1690,6 +1690,22 @@
           <span class="toggle-track"></span>
         </label>
       </div>
+
+      <!-- PHOTO EDITING -->
+      <div style="margin-bottom:20px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:10px">Photos</div>
+        <!-- Current photos -->
+        <div id="editCurrentPhotos" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>
+        <!-- Add new photo -->
+        <label style="display:flex;align-items:center;gap:10px;padding:12px;border:2px dashed #e5e7eb;border-radius:10px;cursor:pointer;background:#fafafa">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span style="font-size:13px;color:#888">Tap to add or replace photo</span>
+          <input type="file" id="editPhotoInput" accept="image/*,video/*" multiple style="display:none" onchange="handleEditPhotoSelect(this.files)">
+        </label>
+        <div id="editNewPhotoPreview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
+        <div style="font-size:11px;color:#aaa;margin-top:6px">Add new photos above. Click ✕ on existing photos to remove them.</div>
+      </div>
+
       <button onclick="saveEditProduct()" style="width:100%;padding:15px;background:#cc0000;color:white;border:none;border-radius:12px;font-family:var(--font-head);font-size:16px;font-weight:700;cursor:pointer">
         Save Changes
       </button>
@@ -3221,7 +3237,47 @@ async function saveProductOrder() {
 /* ════════════════════════════════════════════════
    EDIT PRODUCT
 ═══════════════════════════════════════════════════ */
-async function editProduct(id) {
+let editNewFiles = [];
+let editCurrentUrls = [];
+
+function handleEditPhotoSelect(files) {
+  editNewFiles = Array.from(files);
+  const preview = document.getElementById('editNewPhotoPreview');
+  preview.innerHTML = editNewFiles.map((f, i) => {
+    const url = URL.createObjectURL(f);
+    return `<div style="position:relative;width:70px;height:70px">
+      <img src="${url}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:2px solid #cc0000">
+      <span style="position:absolute;top:-6px;right:-6px;background:#cc0000;color:white;border-radius:50%;width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="removeEditNewPhoto(${i})">✕</span>
+    </div>`;
+  }).join('');
+}
+
+function removeEditNewPhoto(idx) {
+  editNewFiles.splice(idx, 1);
+  handleEditPhotoSelect(editNewFiles);
+}
+
+function removeEditCurrentPhoto(idx) {
+  editCurrentUrls.splice(idx, 1);
+  renderEditCurrentPhotos();
+}
+
+function renderEditCurrentPhotos() {
+  const container = document.getElementById('editCurrentPhotos');
+  if (!container) return;
+  if (!editCurrentUrls.length) {
+    container.innerHTML = '<div style="font-size:12px;color:#aaa">No current photos</div>';
+    return;
+  }
+  container.innerHTML = editCurrentUrls.map((url, i) =>
+    `<div style="position:relative;width:70px;height:70px">
+      <img src="${url}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb">
+      <span title="Remove photo" style="position:absolute;top:-6px;right:-6px;background:#111;color:white;border-radius:50%;width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="removeEditCurrentPhoto(${i})">✕</span>
+    </div>`
+  ).join('');
+}
+
+
   // Convert to number to match Supabase integer IDs
   id = parseInt(id);
 
@@ -3271,6 +3327,13 @@ async function editProduct(id) {
     catSel.innerHTML += `<option value="${p.category}" selected>${p.category.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}</option>`;
   }
 
+  // Reset photo state
+  editNewFiles = [];
+  editCurrentUrls = Array.isArray(p.media_urls) ? [...p.media_urls] : [];
+  renderEditCurrentPhotos();
+  const newPreview = document.getElementById('editNewPhotoPreview');
+  if (newPreview) newPreview.innerHTML = '';
+
   // Show modal
   document.getElementById('editModal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
@@ -3282,40 +3345,82 @@ function closeEditModal() {
 }
 
 async function saveEditProduct() {
-  const id = document.getElementById('editProductId').value;
-  const name = document.getElementById('editName').value.trim();
-  const brand = document.getElementById('editBrand').value.trim();
-  const category = document.getElementById('editCategory').value;
-  const price = parseFloat(document.getElementById('editPrice').value);
-  const retail = parseFloat(document.getElementById('editRetail').value) || null;
-  const desc = document.getElementById('editDesc').value.trim();
-  const isHot = document.getElementById('editHotDeal').checked;
+  const id        = document.getElementById('editProductId').value;
+  const name      = document.getElementById('editName').value.trim();
+  const brand     = document.getElementById('editBrand').value.trim();
+  const category  = document.getElementById('editCategory').value;
+  const price     = parseFloat(document.getElementById('editPrice').value);
+  const retail    = parseFloat(document.getElementById('editRetail').value) || null;
+  const desc      = document.getElementById('editDesc').value.trim();
+  const isHot     = document.getElementById('editHotDeal').checked;
   const condition = document.getElementById('editCondition').value;
-  const color = document.getElementById('editColor') ? document.getElementById('editColor').value.trim() : '';
+  const color     = document.getElementById('editColor') ? document.getElementById('editColor').value.trim() : '';
 
   if (!name) { alert('Please enter a product name.'); return; }
   if (!price || isNaN(price)) { alert('Please enter a valid price.'); return; }
 
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': SUPABASE_ANON,
-      'Authorization': `Bearer ${SUPABASE_ANON}`
-    },
-    body: JSON.stringify({ name, brand, category, price, retail_price: retail, description: desc, hot_deal: isHot, condition, color: color || null })
-  });
+  const btn = document.querySelector('#editModal button[onclick="saveEditProduct()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
 
-  if (!res.ok) {
-    const err = await res.text();
-    alert('Save failed: ' + err);
-    return;
+  try {
+    // Upload any new photos
+    let finalUrls = [...editCurrentUrls];
+    for (let i = 0; i < editNewFiles.length; i++) {
+      if (btn) btn.textContent = `Uploading photo ${i+1}…`;
+      const file = editNewFiles[i];
+      const ext = file.name.split('.').pop().toLowerCase();
+      const fileName = 'product_' + Date.now() + '_' + i + '.' + ext;
+      const uploadRes = await fetch(SUPABASE_URL + '/storage/v1/object/redhotdealz-media/' + fileName, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON,
+          'Authorization': 'Bearer ' + SUPABASE_ANON,
+          'Content-Type': file.type,
+          'x-upsert': 'true'
+        },
+        body: file
+      });
+      if (uploadRes.ok) {
+        finalUrls.push(SUPABASE_URL + '/storage/v1/object/public/redhotdealz-media/' + fileName);
+      }
+    }
+
+    if (btn) btn.textContent = 'Saving…';
+
+    const res = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + id, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': 'Bearer ' + SUPABASE_ANON
+      },
+      body: JSON.stringify({
+        name, brand, category, price,
+        retail_price: retail,
+        description: desc,
+        hot_deal: isHot,
+        condition,
+        color: color || null,
+        media_urls: finalUrls
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      alert('Save failed: ' + err);
+      return;
+    }
+
+    closeEditModal();
+    showToast('Product updated successfully!', 'success');
+    await loadAdminProducts();
+    await loadProducts();
+
+  } catch(e) {
+    alert('Error: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
   }
-
-  closeEditModal();
-  showToast('Product updated successfully!', 'success');
-  await loadAdminProducts();
-  await loadProducts();
 }
 
 
