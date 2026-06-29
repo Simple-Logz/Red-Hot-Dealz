@@ -4051,28 +4051,19 @@ function renderRecommendations(product) {
 function shareProduct(slug) {
   const p = allProducts.find(x => toSlug(x.name) === slug);
   if (!p) return;
-
   const price = Number(p.price).toFixed(2);
   const retail = p.retail_price ? Number(p.retail_price).toFixed(2) : null;
   const discount = retail ? Math.round((1 - p.price / p.retail_price) * 100) : 0;
-
-  const text = `🔥 ${p.name}\n\n` +
-    (discount ? `Was $${retail} → Now only $${price} (${discount}% OFF!)\n\n` : `Only $${price}\n\n`) +
-    `✓ Brand new\n✓ Fast USPS shipping\n✓ Secure checkout\n\n` +
-    `Shop now → https://redhotdealz.com`;
-
+  const shareUrl = 'https://redhotdealz.com/api/og?p=' + slug;
+  const caption = '🔥 ' + p.name + '\n\n' +
+    (discount ? 'Was $' + retail + ' → Now $' + price + ' (' + discount + '% OFF)\n\n' : 'Only $' + price + '\n\n') +
+    '✓ Brand new  ✓ Fast USPS shipping\n\n' + shareUrl;
   if (navigator.share) {
-    navigator.share({
-      title: p.name + ' — RedHotDealz',
-      text: text,
-      url: 'https://redhotdealz.com'
-    });
+    navigator.share({ title: p.name, text: caption, url: shareUrl });
   } else {
-    navigator.clipboard.writeText(text).then(() => {
-      showToast('Post copied! Paste it on Facebook or Instagram with the product photo.', 'success');
-    }).catch(() => {
-      prompt('Copy this post:', text);
-    });
+    navigator.clipboard.writeText(caption).then(() => {
+      showToast('Copied! Paste on Facebook or WhatsApp — product photo will show automatically.', 'success');
+    }).catch(() => { prompt('Copy this:', caption); });
   }
 }
 
