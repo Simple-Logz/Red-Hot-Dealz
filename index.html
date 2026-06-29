@@ -2151,6 +2151,10 @@ function openModal(id) {
         <div class="form-field"><label>Notes (optional)</label><textarea id="oNotes" placeholder="Any special requests…" style="min-height:60px"></textarea></div>
         <button class="btn-add-cart" style="margin-bottom:10px" onclick="addToCart(${p.id});closeModal()">Add to Cart</button>
         <button class="btn-order" onclick="submitOrder(${p.id})">Order Now — $${Number(p.price).toFixed(2)}</button>
+        <button onclick="shareProduct('${toSlug(p.name)}')" style="width:100%;margin-top:10px;padding:12px;border:1.5px solid #e5e7eb;border-radius:12px;background:white;font-family:var(--font-head);font-size:14px;font-weight:600;color:#555;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share this product
+        </button>
       </div>
 
       <!-- REVIEWS SECTION inside modal -->
@@ -3637,6 +3641,19 @@ function renderRecommendations(product) {
       </div>
     </div>
   `;
+}
+
+function shareProduct(slug) {
+  const shareUrl = 'https://redhotdealz.com/api/og?product=' + slug;
+  if (navigator.share) {
+    navigator.share({ url: shareUrl });
+  } else {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      showToast('Product link copied! Paste it on Facebook, Instagram or WhatsApp.', 'success');
+    }).catch(() => {
+      prompt('Copy this link to share:', shareUrl);
+    });
+  }
 }
 
 function showAbout() {
